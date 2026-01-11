@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Hub | Master Admin</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+    .admin-nav-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: flex;
+        gap: 15px;
+    }
+
+    .btn-admin-chat {
+        background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+        color: #000;
+        border: none;
+        padding: 12px 25px;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        position: relative;
+    }
+
+    .btn-admin-chat:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+    }
+
+    /* Notification Badge Style */
+    #adminNotifBadge {
+        display: none; /* Default hidden */
+        position: absolute;
+        top: -8px;
+        left: -5px;
+        background: #ff0000;
+        color: white;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        min-width: 22px;
+        height: 22px;
+        font-size: 11px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 18px;
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+    }
+
+    /* Pulse Animation jab message aaye */
+    .pulse-animation {
+        animation: admin-glow 1.5s infinite;
+    }
+
+    @keyframes admin-glow {
+        0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+    }
+</style>
+
+<div class="admin-nav-container">
+    <div style="position: relative;">
+        <span id="adminNotifBadge">0</span>
+        
+        <button onclick="window.location.href='admin-chat.html'" id="adminChatBtn" class="btn-admin-chat">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Customer Messages
+        </button>
+    </div>
+</div>
+
+<script>
+    
+    // Firebase Database Reference
+    const adminDb = firebase.database();
+
+    function listenForCustomerMessages() {
+        // 'admin_notifications' path ko monitor karna
+        adminDb.ref('admin_notifications').on('value', (snapshot) => {
+            let totalUnread = 0;
+            const data = snapshot.val();
+
+            if (data) {
+                // Har user ki notification check karein
+                Object.keys(data).forEach(uid => {
+                    if (data[uid].unread > 0) {
+                        totalUnread += data[uid].unread;
+                    }
+                });
+            }
+
+            const badge = document.getElementById('adminNotifBadge');
+            const btn = document.getElementById('adminChatBtn');
+
+            if (totalUnread > 0) {
+                // Agar koi naya message hai
+                badge.innerText = totalUnread;
+                badge.style.display = 'block';
+                btn.classList.add('pulse-animation'); // Button ko glow karwao
+                
+                // Optional: Sound play karein (Browser permission zaruri hai)
+                // new Audio('https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3').play();
+            } else {
+                // Agar sab dekh liye hain
+                badge.style.display = 'none';
+                btn.classList.remove('pulse-animation');
+            }
+        });
+    }
+
+    // Page load hote hi notification check shuru karein
+    window.onload = function() {
+        listenForCustomerMessages();
+    };
+</script>
+
+    <style>
+        :root { --gold: #ffd700; --red: #ff4d4d; --green: #00ff88; --bg: #050505; --card: #121212; --input: #0a0a0a; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: white; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        h1, h2, h3 { color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-box { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #222; text-align: center; }
+
+        /* Manage Deposit Addresses */
+        .admin-box { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid #222; margin-bottom: 30px; }
+        .address-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; }
+        .addr-input-group label { display: block; font-size: 13px; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
+        .input-field { width: 100%; padding: 12px; background: var(--input); border: 1px solid #333; color: #fff; border-radius: 8px; outline: none; }
+        .input-field:focus { border-color: var(--gold); }
+        .btn-gold { width: 100%; margin-top: 20px; background: var(--gold); color: #000; padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+
+        /* Requests Section */
+        .grid-requests { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .req-container { height: 350px; overflow-y: auto; background: var(--input); padding: 15px; border-radius: 12px; border: 1px solid #222; }
+        .req-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid var(--gold); position: relative; }
+        .req-card p { margin: 5px 0; font-size: 13px; }
+
+        /* Registered Users Table */
+        .search-bar { width: 100%; padding: 15px; background: var(--input); border: 1px solid #333; color: white; border-radius: 10px; margin-bottom: 20px; }
+        .user-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .user-table th { text-align: left; padding: 15px; color: var(--gold); border-bottom: 1px solid #333; font-size: 14px; }
+        .user-table td { padding: 15px; border-bottom: 1px solid #222; font-size: 14px; }
+        
+        .status-active { color: var(--green); font-weight: bold; }
+        .status-blocked { color: var(--red); font-weight: bold; }
+        
+        .btn-sm { padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; margin-right: 5px; }
+        .btn-review { background: #333; color: white; }
+        .btn-block { background: white; color: black; }
+        .btn-approve { background: var(--green); color: black; }
+        .btn-reject { background: var(--red); color: white; }
+
+        /* --- MODAL STYLING --- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); overflow-y: auto; }
+        .modal-content { background: var(--card); margin: 2% auto; padding: 30px; width: 95%; max-width: 550px; border-radius: 15px; border: 1px solid var(--gold); position: relative; }
+        .close-btn { position: absolute; right: 20px; top: 15px; color: var(--gold); font-size: 28px; cursor: pointer; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222; }
+        .detail-row b { color: var(--gold); }
+
+        /* Chat Inside Modal */
+        .chat-container { margin-top: 20px; background: #000; border-radius: 10px; padding: 10px; border: 1px solid #333; }
+        .chat-box { height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 5px; }
+        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+        .msg.admin { align-self: flex-end; background: var(--gold); color: #000; }
+        .msg.user { align-self: flex-start; background: #222; color: #fff; }
+
+        @media (max-width: 768px) { .grid-requests { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    
+    
+<div class="container">
+    <h1>Admin Master Control</h1>
+
+    <div class="stats-grid">
+        <div class="stat-box"><h2 id="statUsers">0</h2><p>Total Users</p></div>
+        <div class="stat-box"><h2 id="statDep" style="color: var(--gold);">0</h2><p>Pending Deposits</p></div>
+        <div class="stat-box"><h2 id="statWith" style="color: var(--red);">0</h2><p>Pending Withdraws</p></div>
+    </div>
+
+    <div class="admin-box">
+        <h3>⚙️ Manage Deposit Addresses</h3>
+        <div class="address-grid">
+            <div class="addr-input-group"><label>USDT (TRC20)</label><input type="text" id="trc20" class="input-field"></div>
+            <div class="addr-input-group"><label>USDT (BEP20)</label><input type="text" id="bep20" class="input-field"></div>
+            <div class="addr-input-group"><label>USDT (ERC20)</label><input type="text" id="erc20" class="input-field"></div>
+            <div class="addr-input-group"><label>USDT (Polygon)</label><input type="text" id="poly" class="input-field"></div>
+        </div>
+        <button class="btn-gold" onclick="saveAddresses()">Update All Addresses</button>
+    </div>
+
+    <div class="grid-requests">
+        <div>
+            <h3>📥 Deposit Requests</h3>
+            <div id="depList" class="req-container">Loading...</div>
+        </div>
+        <div>
+            <h3>📤 Withdraw Requests</h3>
+            <div id="withList" class="req-container">Loading...</div>
+        </div>
+    </div>
+
+    <div class="admin-box">
+        <h3>👥 Registered Users</h3>
+        <input type="text" id="userSearch" class="search-bar" onkeyup="searchUsers()" placeholder="Search by Email or ID...">
+        
+        <div style="overflow-x: auto;">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>User Details</th>
+                        <th>Wallet Balance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="reviewModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2 style="color:var(--gold)">User Review & Support</h2>
+        <div id="modalBody"></div>
+        
+        <div class="chat-container">
+            <h4 style="margin:0 0 10px 0; color:var(--gold)">Live Chat</h4>
+            <div id="chatBox" class="chat-box"></div>
+            <div style="display:flex; gap:5px; margin-top:10px;">
+                <input type="text" id="adminMsg" class="input-field" placeholder="Reply to user..." style="margin:0;">
+                <button class="btn-sm btn-approve" onclick="sendReply()">Send</button>
+            </div>
+        </div>
+
+        <div style="margin-top:20px;">
+            <button class="btn-sm btn-approve" style="width:100%; margin-bottom:10px;" onclick="promptWalletUpdate()">Update Wallet Balance</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
+        databaseURL: "https://ludo-joy-fb32d-default-rtdb.firebaseio.com",
+        projectId: "ludo-joy-fb32d",
+        appId: "1:128560388256:web:a8b945a3658160277391c5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let currentReviewUID = "";
+
+    function init() {
+        // Fetch Addresses
+        db.ref('adminSettings/addresses').once('value', s => {
+            const d = s.val();
+            if(d) {
+                document.getElementById('trc20').value = d.trc20 || "";
+                document.getElementById('bep20').value = d.bep20 || "";
+                document.getElementById('erc20').value = d.erc20 || "";
+                document.getElementById('poly').value = d.poly || "";
+            }
+        });
+
+        // Sync Deposits
+        db.ref('depositRequests').on('value', snap => {
+            const list = document.getElementById('depList');
+            list.innerHTML = ""; let count = 0;
+            snap.forEach(child => {
+                const req = child.val();
+                if(req.status === 'pending') {
+                    count++;
+                    list.innerHTML += `
+                    <div class="req-card">
+                        <p><b>User:</b> ${req.email || 'Unknown'}</p>
+                        <p style="color:#666; font-size:11px">UID: ${req.uid}</p>
+                        <p><b>TID:</b> ${req.tid}</p>
+                        <input type="number" id="amt_${child.key}" class="input-field" style="margin:10px 0" placeholder="Enter Amount">
+                        <button class="btn-sm btn-approve" onclick="approveDep('${child.key}', '${req.uid}')">Approve</button>
+                        <button class="btn-sm btn-reject" onclick="rejectReq('depositRequests', '${child.key}')">Reject</button>
+                    </div>`;
+                }
+            });
+            document.getElementById('statDep').innerText = count;
+        });
+
+        // Sync Withdrawals (Fixed Tags)
+        db.ref('withdrawRequests').on('value', snap => {
+            const list = document.getElementById('withList');
+            list.innerHTML = ""; let count = 0;
+            snap.forEach(child => {
+                const req = child.val();
+                if(req.status === 'pending') {
+                    count++;
+                    list.innerHTML += `
+                    <div class="req-card" style="border-left-color: var(--red);">
+                        <p><b>User:</b> ${req.email || 'Unknown'}</p>
+                        <p><b>Amount:</b> $${req.requestedAmount || req.amount}</p>
+                        <p><b>Address:</b> <small>${req.walletAddress || req.address}</small></p>
+                        <p><b>Network:</b> ${req.network}</p>
+                        <div style="margin-top:10px;">
+                            <button class="btn-sm btn-approve" onclick="approveWith('${child.key}')">Mark Completed</button>
+                            <button class="btn-sm btn-reject" onclick="rejectReq('withdrawRequests', '${child.key}')">Reject</button>
+                        </div>
+                    </div>`;
+                }
+            });
+            document.getElementById('statWith').innerText = count;
+        });
+
+        // Sync Users
+        db.ref('users').on('value', snap => {
+            const table = document.getElementById('userTableBody');
+            table.innerHTML = ""; let uCount = 0;
+            snap.forEach(child => {
+                uCount++;
+                const u = child.val();
+                const statusClass = u.status === 'blocked' ? 'status-blocked' : 'status-active';
+                table.innerHTML += `
+                <tr>
+                    <td><b>${u.email}</b><br><small style="color:#666">${child.key}</small></td>
+                    <td><b>$${u.wallet || 0}</b></td>
+                    <td class="${statusClass}">${u.status || 'Active'}</td>
+                    <td>
+                        <button class="btn-sm btn-review" onclick="openReview('${child.key}')">Review</button>
+                        <button class="btn-sm btn-block" onclick="toggleBlock('${child.key}', '${u.status}')">
+                            ${u.status === 'blocked' ? 'Unblock' : 'Block'}
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('statUsers').innerText = uCount;
+        });
+    }
+
+    // Modal & Chat Functions
+    function openReview(uid) {
+        currentReviewUID = uid;
+        db.ref('users/'+uid).once('value', s => {
+            const u = s.val();
+            const body = document.getElementById('modalBody');
+            body.innerHTML = `
+                <div class="detail-row"><b>Email:</b> <span>${u.email}</span></div>
+                <div class="detail-row"><b>Balance:</b> <span style="color:var(--green)">$${u.wallet || 0}</span></div>
+                <div class="detail-row"><b>Profit/Loss:</b> <span>+$${u.profit || 0} / -$${u.loss || 0}</span></div>
+                <div class="detail-row"><b>Total Dep/With:</b> <span>$${u.totalDeposit || 0} / $${u.totalWithdraw || 0}</span></div>
+            `;
+            loadChat(uid);
+            document.getElementById('reviewModal').style.display = "block";
+        });
+    }
+
+    function loadChat(uid) {
+        db.ref('chats/'+uid).on('value', snap => {
+            const box = document.getElementById('chatBox');
+            box.innerHTML = "";
+            snap.forEach(child => {
+                const msg = child.val();
+                const cls = msg.sender === 'admin' ? 'admin' : 'user';
+                box.innerHTML += `<div class="msg ${cls}">${msg.text}</div>`;
+            });
+            box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    function sendReply() {
+        const txt = document.getElementById('adminMsg').value;
+        if(txt) {
+            db.ref('chats/'+currentReviewUID).push({ sender: 'admin', text: txt, timestamp: Date.now() });
+            document.getElementById('adminMsg').value = "";
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('reviewModal').style.display = "none";
+    }
+
+    function promptWalletUpdate() {
+        let amt = prompt("Enter new wallet balance:");
+        if(amt !== null && !isNaN(amt)) {
+            db.ref('users/'+currentReviewUID).update({ wallet: parseFloat(amt) }).then(() => {
+                alert("Updated!");
+                openReview(currentReviewUID);
+            });
+        }
+    }
+
+    function saveAddresses() {
+        const data = {
+            trc20: document.getElementById('trc20').value,
+            bep20: document.getElementById('bep20').value,
+            erc20: document.getElementById('erc20').value,
+            poly: document.getElementById('poly').value
+        };
+        db.ref('adminSettings/addresses').set(data).then(() => alert("Addresses Updated!"));
+    }
+
+    function searchUsers() {
+        let filter = document.getElementById('userSearch').value.toUpperCase();
+        let rows = document.getElementById('userTableBody').getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].style.display = rows[i].innerText.toUpperCase().includes(filter) ? "" : "none";
+        }
+    }
+
+    function toggleBlock(uid, currentStatus) {
+        const newStatus = currentStatus === 'blocked' ? 'Active' : 'blocked';
+        db.ref('users/'+uid).update({ status: newStatus });
+    }
+
+    function approveDep(reqId, uid) {
+        const amt = parseFloat(document.getElementById('amt_'+reqId).value);
+        if(!amt) return alert("Please enter amount!");
+        db.ref('users/'+uid).once('value', s => {
+            let oldBal = parseFloat(s.val().wallet || 0);
+            let oldDep = parseFloat(s.val().totalDeposit || 0);
+            db.ref('users/'+uid).update({ 
+                wallet: (oldBal + amt).toFixed(2),
+                totalDeposit: (oldDep + amt).toFixed(2)
+            });
+            db.ref('depositRequests/'+reqId).update({ status: 'approved' });
+        });
+    }
+
+    function approveWith(reqId) {
+        if(confirm("Mark as completed?")) db.ref('withdrawRequests/'+reqId).update({ status: 'completed' });
+    }
+
+    function rejectReq(path, id) {
+        if(confirm("Are you sure you want to reject?")) db.ref(path+'/'+id).update({ status: 'rejected' });
+    }
+
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('reviewModal')) closeModal();
+    }
+
+    init();
+</script>
+</body>
+
+</script>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Withdraw USDT | Golden Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root { --gold: #ffd700; --bg: #050505; --card: #111; --red: #ff4d4d; --gray: #888; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Poppins', sans-serif; }
+        body { background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; }
+
+        .header { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .back-link { color: var(--gold); text-decoration: none; font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 5px; }
+        .balance-box { background: rgba(255, 215, 0, 0.1); padding: 8px 15px; border-radius: 12px; border: 1px solid var(--gold); color: var(--gold); font-weight: 800; text-align: right; }
+        .balance-label { display: block; font-size: 10px; color: var(--gray); font-weight: 400; text-transform: uppercase; }
+
+        .withdraw-card { width: 100%; max-width: 450px; background: var(--card); padding: 25px; border-radius: 30px; border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .user-meta { background: #1a1a1a; padding: 12px; border-radius: 15px; margin-bottom: 20px; font-size: 11px; border-left: 4px solid var(--gold); }
+        .user-meta p { color: var(--gray); margin-bottom: 2px; }
+        .user-meta span { color: #fff; font-weight: 600; }
+
+        label { font-size: 13px; color: var(--gray); margin-bottom: 8px; display: block; font-weight: 600; }
+        
+        select, input { width: 100%; padding: 16px; border-radius: 15px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 18px; outline: none; font-size: 14px; transition: 0.3s; }
+        select:focus, input:focus { border-color: var(--gold); }
+
+        .fee-container { background: #161616; padding: 15px; border-radius: 15px; margin-bottom: 25px; border: 1px dashed #444; }
+        .fee-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+        .net-row { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid #333; }
+        .net-amount { color: var(--gold); font-weight: 800; font-size: 18px; }
+
+        .btn-withdraw { width: 100%; padding: 18px; background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; border: none; border-radius: 18px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 15px; letter-spacing: 1px; box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2); }
+        .btn-withdraw:active { transform: scale(0.98); }
+
+        .info-note { width: 100%; max-width: 450px; margin-top: 20px; font-size: 11px; color: #666; text-align: center; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="home.html" class="back-link"><span>&#8592;</span> BACK</a>
+        <div class="balance-box">
+            <span class="balance-label">Total Balance</span>
+            $<span id="userBalance">0.00</span>
+        </div>
+    </div>
+
+    <div class="withdraw-card">
+        <div class="user-meta">
+            <p>Account: <span id="displayEmail">Loading...</span></p>
+            <p>User ID: <span id="displayUID">...</span></p>
+        </div>
+
+        <label>Select USDT Network</label>
+        <select id="network">
+            <option value="USDT (TRC20)">USDT (Tron - TRC20)</option>
+            <option value="USDT (BEP20)">USDT (BSC - BEP20)</option>
+            <option value="USDT (ERC20)">USDT (Ethereum - ERC20)</option>
+            <option value="USDT (Polygon)">USDT (Polygon - MATIC)</option>
+        </select>
+
+        <label>Your Wallet Address</label>
+        <input type="text" id="address" placeholder="Enter or Paste your address">
+
+        <label>Withdrawal Amount ($)</label>
+        <input type="number" id="amount" placeholder="Min 10.00" oninput="calculateNet()">
+
+        <div class="fee-container">
+            <div class="fee-row">
+                <span>Network Fee:</span>
+                <span style="color: var(--red);">-$3.00</span>
+            </div>
+            <div class="net-row">
+                <span>You will receive:</span>
+                <span class="net-amount" id="netAmount">$0.00</span>
+            </div>
+        </div>
+
+        <button class="btn-withdraw" onclick="submitWithdraw()">Submit Withdrawal</button>
+    </div>
+
+    <div class="info-note">
+        Processing may take up to 24 hours. Ensure the address and network match. Sending USDT to the wrong network will result in permanent loss of funds.
+    </div>
+
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
+        databaseURL: "https://ludo-joy-fb32d-default-rtdb.firebaseio.com",
+        projectId: "ludo-joy-fb32d",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    let currentBalance = 0;
+    const fee = 3.00;
+
+    // Check Auth and Sync Balance
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById('displayEmail').innerText = user.email;
+            document.getElementById('displayUID').innerText = user.uid.substring(0, 10).toUpperCase();
+
+            // Real-time Balance fetch (Same as Home Page)
+            db.ref('users/' + user.uid + '/wallet').on('value', (snapshot) => {
+                currentBalance = parseFloat(snapshot.val()) || 0;
+                document.getElementById('userBalance').innerText = currentBalance.toFixed(2);
+            });
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    function calculateNet() {
+        let amt = parseFloat(document.getElementById('amount').value) || 0;
+        let net = amt > fee ? amt - fee : 0;
+        document.getElementById('netAmount').innerText = "$" + net.toFixed(2);
+    }
+
+    function submitWithdraw() {
+        const user = auth.currentUser;
+        const addressValue = document.getElementById('address').value.trim();
+        const networkValue = document.getElementById('network').value;
+        const amountValue = parseFloat(document.getElementById('amount').value);
+        const receiveAmount = amountValue - fee;
+
+        // Validations
+        if (!addressValue || addressValue.length < 20) {
+            return alert("Please enter a valid and complete wallet address!");
+        }
+        if (isNaN(amountValue) || amountValue < 10) {
+            return alert("Minimum withdrawal amount is $10!");
+        }
+        if (amountValue > currentBalance) {
+            return alert("Insufficient balance in your wallet!");
+        }
+
+        // Final Confirmation
+        const confirmMsg = `Confirm Withdrawal:\n\nNetwork: ${networkValue}\nAddress: ${addressValue}\nTotal Amount: $${amountValue}\nReceive After Fee: $${receiveAmount.toFixed(2)}\n\nProceed?`;
+        
+        if (confirm(confirmMsg)) {
+            const requestRef = db.ref('withdrawRequests');
+            const newRequest = requestRef.push();
+
+            const withdrawData = {
+                requestId: newRequest.key,
+                uid: user.uid,
+                email: user.email,
+                walletAddress: addressValue, // Admin ko pura address yahan milega
+                network: networkValue,       // Pura network name admin ko jayega
+                requestedAmount: amountValue,
+                fee: fee,
+                receiveAmount: receiveAmount,
+                status: "pending",
+                timestamp: Date.now()
+            };
+
+            // 1. Submit to Admin Node
+            newRequest.set(withdrawData)
+            .then(() => {
+                // 2. Deduct from User's real wallet balance
+                return db.ref('users/' + user.uid).update({
+                    wallet: currentBalance - amountValue
+                });
+            })
+            .then(() => {
+                alert("Withdrawal request submitted successfully! Your funds are under review.");
+                window.location.href = "home.html";
+            })
+            .catch((error) => {
+                alert("Error: " + error.message);
+            });
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Dashboard - Earn 50% Profit</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <style>
+        :root { --gold: #f0b90b; --bg: #0b0e11; --card-bg: #1e2329; --text-gray: #848e9c; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 15px; }
+        .container { max-width: 480px; margin: auto; }
+        
+        h2 { color: var(--gold); margin: 10px 0; text-align: center; font-size: 24px; text-transform: uppercase; }
+        .subtitle { text-align: center; color: var(--text-gray); font-size: 14px; margin-bottom: 25px; }
+
+        .live-card {
+            background: linear-gradient(135deg, #1e2329 0%, #2b3139 100%);
+            border-radius: 20px; padding: 25px; border: 1px solid #333;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 20px; position: relative; overflow: hidden;
+        }
+        .live-label { font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; display: block; }
+        .live-amount { font-size: 36px; font-weight: bold; margin: 5px 0; color: #fff; }
+        .live-stats { display: flex; justify-content: space-around; margin-top: 20px; border-top: 1px solid #333; padding-top: 15px; }
+        .stat-item p { margin: 0; font-size: 12px; color: var(--text-gray); }
+        .stat-item span { font-size: 18px; font-weight: bold; color: var(--gold); }
+
+        .link-section { background: var(--card-bg); border-radius: 15px; padding: 20px; border: 1px solid #333; margin-bottom: 20px; }
+        .link-label { font-size: 14px; color: var(--text-gray); margin-bottom: 10px; display: block; }
+        .link-box { 
+            background: #000; border: 1px dashed var(--gold); padding: 12px; border-radius: 10px; 
+            color: var(--gold); font-size: 13px; word-break: break-all; cursor: pointer; text-align: center;
+        }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn { border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
+        .btn-wa { background: #25D366; color: white; }
+        .btn-more { background: var(--gold); color: black; grid-column: span 2; }
+
+        .guide-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border: 1px solid #333; text-align: left; }
+        .guide-card h3 { color: var(--gold); font-size: 18px; margin-top: 0; }
+        .step { margin-bottom: 15px; display: flex; gap: 12px; }
+        .step-num { background: var(--gold); color: black; min-width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+        .step-text { font-size: 14px; color: #ccc; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Partner Program</h2>
+    <p class="subtitle">Earn 50% Lifetime Profit Share in USD ($)</p>
+
+    <div class="live-card">
+        <span class="live-label">● Live Affiliate Earnings ($)</span>
+        <div class="live-amount" id="liveProfit">$0.00</div>
+        <div class="live-stats">
+            <div class="stat-item">
+                <p>Total Referrals</p>
+                <span id="totalRefs">0</span>
+            </div>
+            <div class="stat-item">
+                <p>Commission</p>
+                <span>50%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="link-section">
+        <span class="link-label">Your Referral Link (Tap to Copy)</span>
+        <div class="link-box" id="refLink" onclick="copyLink()">Generating link...</div>
+        
+        <div class="btn-grid">
+            <button class="btn btn-wa" onclick="shareWhatsApp()">WhatsApp</button>
+            <button class="btn btn-more" onclick="shareGeneral()">Share with Friends</button>
+        </div>
+    </div>
+
+    <div class="guide-card">
+        <h3>How to Earn?</h3>
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text"><b>Invite Friends:</b> Copy your unique link and share it on Social Media.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text"><b>Registration:</b> Friends must sign up using your link to be tracked.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text"><b>50% Profit:</b> You get <b>50%</b> of the daily profit earned by your referrals.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-text"><b>USD Payouts:</b> All your earnings are calculated and paid in <b>Dollars ($)</b>.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- FIREBASE CONFIG (Paste your real keys here) ---
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        databaseURL: "YOUR_DATABASE_URL",
+        projectId: "YOUR_PROJECT_ID",
+        authDomain: "YOUR_AUTH_DOMAIN"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            const myUID = user.uid;
+            // UPDATE THIS: Use your real domain once hosted
+            const myLink = window.location.origin + "/signup.html?ref=" + myUID;
+            document.getElementById('refLink').innerText = myLink;
+
+            const usersRef = firebase.database().ref('users');
+            
+            // Listen for referrals live
+            usersRef.orderByChild('referredBy').equalTo(myUID).on('value', (snapshot) => {
+                let count = 0;
+                let totalCommissionUSD = 0;
+
+                snapshot.forEach((childSnapshot) => {
+                    count++;
+                    // "dailyProfit" must be stored in USD in your database
+                    let friendProfit = parseFloat(childSnapshot.val().dailyProfit) || 0;
+                    totalCommissionUSD += (friendProfit * 0.50); 
+                });
+
+                document.getElementById('totalRefs').innerText = count;
+                document.getElementById('liveProfit').innerText = "$" + totalCommissionUSD.toFixed(2);
+                
+                // Final step: Update this user's balance
+                updateTotalBalance(myUID, totalCommissionUSD);
+            }, (error) => {
+                console.error("Database Error: ", error);
+            });
+        } else {
+            // Optional: Redirect to login if not authenticated
+            // window.location.href = "login.html";
+        }
+    });
+
+    function updateTotalBalance(uid, refCommission) {
+        const userRef = firebase.database().ref('users/' + uid);
+        userRef.once('value').then((snap) => {
+            if (snap.exists()) {
+                let myOwnProfit = parseFloat(snap.val().myInvestmentProfit) || 0;
+                let finalBalance = myOwnProfit + refCommission;
+                
+                // Updating both fields for clarity
+                userRef.update({
+                    referralEarningUSD: refCommission,
+                    totalBalanceUSD: finalBalance
+                });
+            }
+        });
+    }
+
+    function copyLink() {
+        const link = document.getElementById('refLink').innerText;
+        navigator.clipboard.writeText(link).then(() => {
+            alert("Referral link copied in Dollars ($)!");
+        });
+    }
+
+    function shareWhatsApp() {
+        const msg = encodeURIComponent("🚀 Join and earn daily profit in Dollars! My referral link: " + document.getElementById('refLink').innerText);
+        window.open("https://api.whatsapp.com/send?text=" + msg, "_blank");
+    }
+
+    function shareGeneral() {
+        const link = document.getElementById('refLink').innerText;
+        if (navigator.share) {
+            navigator.share({
+                title: 'Earn 50% Profit Share',
+                text: 'Join now and earn in USD!',
+                url: link
+            });
+        } else { copyLink(); }
+    }
+</script>
+</body>
+</html>
