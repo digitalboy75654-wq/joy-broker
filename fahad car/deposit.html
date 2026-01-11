@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Deposit Assets | Golden Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        :root { --gold: #ffd700; --bg: #050505; --card: #111; --red: #ff4d4d; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Poppins', sans-serif; }
+        body { background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+
+        .header { width: 100%; max-width: 450px; display: flex; align-items: center; margin-bottom: 20px; }
+        .back-link { color: var(--gold); text-decoration: none; font-weight: bold; font-size: 14px; }
+
+        .info-panel { 
+            width: 100%; max-width: 450px; background: rgba(255, 215, 0, 0.05); 
+            border: 1px solid rgba(255, 215, 0, 0.2); padding: 20px; 
+            border-radius: 20px; margin-bottom: 25px; text-align: left;
+        }
+        .info-panel h3 { color: var(--gold); font-size: 18px; margin-bottom: 10px; }
+        .info-panel p { font-size: 13px; color: #ccc; line-height: 1.6; margin-bottom: 8px; }
+        
+        .warning-box { 
+            background: rgba(255, 77, 77, 0.1); border: 1px solid var(--red); 
+            padding: 12px; border-radius: 12px; margin-top: 10px;
+        }
+        .warning-box b { color: var(--red); font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px; }
+
+        .grid { width: 100%; max-width: 450px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .asset-card { 
+            background: var(--card); border: 1px solid #222; padding: 20px; 
+            border-radius: 20px; text-align: center; cursor: pointer; transition: 0.3s;
+        }
+        .asset-card:hover { border-color: var(--gold); background: #1a1a1a; }
+        .asset-name { font-weight: bold; display: block; color: #fff; font-size: 14px; }
+
+        .deposit-form { width: 100%; max-width: 450px; background: var(--card); padding: 25px; border-radius: 25px; margin-top: 25px; border: 1px solid #222; }
+        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; margin: 15px 0; outline: none; text-align: center; font-size: 14px; }
+        .btn-submit { width: 100%; padding: 15px; background: var(--gold); color: #000; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; }
+
+        .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); backdrop-filter:blur(10px); display:none; justify-content:center; align-items:center; z-index:1000; }
+        .popup { background: #1a1a1a; width: 85%; max-width: 350px; padding: 30px; border-radius: 25px; border: 1px solid #333; text-align: center; }
+        .copy-box { background: #000; padding: 15px; border-radius: 12px; word-break: break-all; margin: 20px 0; font-size: 12px; color: var(--gold); border: 1px dashed #444; }
+        .btn-copy { background: #333; color: #fff; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; width: 100%; }
+
+        .active { display: flex; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="home.html" class="back-link">← Back to Home</a>
+    </div>
+
+    <div class="info-panel">
+        <h3>How to Deposit?</h3>
+        <p>1. Select your preferred network below.</p>
+        <p>2. Copy the <b>Official Address</b> and transfer funds from your exchange or wallet.</p>
+        <p>3. After the transaction is successful, paste your <b>Transaction ID (TID)</b> below.</p>
+        
+        <div class="warning-box">
+            <b>⚠️ IMPORTANT WARNING:</b>
+            <p style="margin: 0; font-size: 12px; color: #ffbaba;">
+                Please ensure you use the correct network. Sending funds to the wrong network will result in the <b>permanent loss of your assets.</b>
+            </p>
+        </div>
+    </div>
+
+    <h4 style="margin-bottom: 15px; color: #888; font-size: 14px; text-transform: uppercase;">Select Network</h4>
+
+    <div class="grid">
+        <div class="asset-card" onclick="openPopup('USDT (TRC20)', 'trx_address')">
+            <span class="asset-name">Tron (TRC20)</span>
+        </div>
+        <div class="asset-card" onclick="openPopup('USDT (BEP20)', 'apt_address')">
+            <span class="asset-name">Binance (BEP20)</span>
+        </div>
+        <div class="asset-card" onclick="openPopup('USDT (ERC20)', 'eth_address')">
+            <span class="asset-name">Ethereum (ERC20)</span>
+        </div>
+        <div class="asset-card" onclick="openPopup('USDT (Polygon)', 'pol_address')">
+            <span class="asset-name">Polygon (POL)</span>
+        </div>
+    </div>
+
+    <div class="deposit-form">
+        <h4 style="text-align: center; font-size: 15px; color: var(--gold);">Confirm Transaction</h4>
+        <input type="text" id="tidInput" placeholder="Paste Transaction ID (TID) Here">
+        <button class="btn-submit" id="submitBtn" onclick="submitTID()">SUBMIT FOR VERIFICATION</button>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="popup">
+            <h3 id="popName" style="color: var(--gold); font-size: 18px;">Network</h3>
+            <p style="font-size: 11px; color: #888; margin-top: 5px;">Official Deposit Address</p>
+            <div class="copy-box" id="popAddr">Fetching...</div>
+            <button class="btn-copy" id="copyBtn" onclick="copyText()">Copy Address</button>
+            <p onclick="closePopup()" style="margin-top: 20px; color: #ff4d4d; cursor: pointer; font-size: 13px; font-weight: bold;">CANCEL</p>
+        </div>
+    </div>
+
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
+        authDomain: "ludo-joy-fb32d.firebaseapp.com",
+        databaseURL: "https://ludo-joy-fb32d-default-rtdb.firebaseio.com",
+        projectId: "ludo-joy-fb32d",
+        storageBucket: "ludo-joy-fb32d.appspot.com",
+        messagingSenderId: "128560388256",
+        appId: "1:128560388256:web:a8b945a3658160277391c5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    let currentAddress = "";
+
+    // Check login state
+    auth.onAuthStateChanged(user => {
+        if (!user) window.location.href = "index.html";
+    });
+
+    function openPopup(name, key) {
+        document.getElementById('popName').innerText = name;
+        document.getElementById('overlay').classList.add('active');
+        document.getElementById('popAddr').innerText = "Loading...";
+
+        db.ref('admin_settings/addresses/' + key).once('value').then((snapshot) => {
+            currentAddress = snapshot.val() || "No Address Set";
+            document.getElementById('popAddr').innerText = currentAddress;
+        });
+    }
+
+    function closePopup() { document.getElementById('overlay').classList.remove('active'); }
+
+    function copyText() {
+        navigator.clipboard.writeText(currentAddress);
+        const btn = document.getElementById('copyBtn');
+        btn.innerText = "COPIED!";
+        setTimeout(() => btn.innerText = "Copy Address", 2000);
+    }
+
+    // Submission Logic with UID, Email, and 24h Notification
+    function submitTID() {
+        const tid = document.getElementById('tidInput').value.trim();
+        const user = auth.currentUser;
+        const btn = document.getElementById('submitBtn');
+
+        if(!user) return alert("Session expired. Please login again.");
+        if(tid.length < 8) return alert("Please enter a valid Transaction ID.");
+
+        btn.disabled = true;
+        btn.innerText = "SUBMITTING...";
+
+        db.ref('depositRequests').push({
+            uid: user.uid,        // Stores user UID for Admin Panel
+            email: user.email,    // Stores email for Admin Panel
+            tid: tid,             // Stores TID
+            status: "pending",
+            timestamp: Date.now()
+        }).then(() => {
+            // Popup without Admin mention
+            alert("Your deposit request has been submitted successfully! It will be verified and added to your wallet within 24 hours.");
+            window.location.href = "home.html";
+        }).catch(err => {
+            alert("Error: " + err.message);
+            btn.disabled = false;
+            btn.innerText = "SUBMIT FOR VERIFICATION";
+        });
+    }
+</script>
+</body>
+</html>

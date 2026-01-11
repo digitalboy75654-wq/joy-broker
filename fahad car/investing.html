@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Golden Hub | Smart Staking</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #ffd700; --bg: #050505; --green: #00ff88; --red: #ff4d4d; --card-bg: #111; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Poppins', sans-serif; }
+        body { background: var(--bg); color: #fff; display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; }
+
+        .header { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .back-btn { color: #fff; text-decoration: none; font-size: 14px; opacity: 0.8; }
+        .wallet-display { background: rgba(255, 215, 0, 0.1); border: 1px solid var(--gold); padding: 10px 20px; border-radius: 15px; color: var(--gold); font-weight: 800; }
+
+        .card { background: var(--card-bg); width: 100%; max-width: 450px; padding: 30px; border-radius: 25px; border: 1px solid #222; margin-bottom: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .card-header h2 { font-size: 24px; color: var(--gold); margin-bottom: 15px; letter-spacing: 1px; }
+        
+        .rules-box { background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 15px; margin-bottom: 20px; text-align: left; border-left: 4px solid var(--gold); }
+        .rules-box p { font-size: 13px; color: #ccc; line-height: 1.6; margin-bottom: 5px; }
+        .rules-box b { color: #fff; }
+
+        input { width: 100%; padding: 18px; border-radius: 15px; border: 1px solid #333; background: #000; color: #fff; font-size: 20px; text-align: center; margin-bottom: 20px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--gold); }
+
+        .sub-btn { width: 100%; padding: 18px; border-radius: 15px; border: none; background: linear-gradient(135deg, var(--gold), #b8860b); color: #000; font-weight: 800; font-size: 16px; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .sub-btn:disabled { background: #222; color: #555; cursor: not-allowed; }
+
+        #liveAssetCard { display: none; border-color: var(--green); text-align: center; }
+        .live-label { font-size: 11px; color: var(--green); letter-spacing: 3px; font-weight: 600; margin-bottom: 10px; }
+        .live-value { font-size: 30px; font-weight: 800; color: #fff; margin: 15px 0; font-family: monospace; }
+        .timer-badge { display: inline-block; padding: 10px 25px; border-radius: 50px; background: rgba(255, 77, 77, 0.1); color: #ff4d4d; font-weight: bold; border: 1px solid rgba(255, 77, 77, 0.2); }
+
+        /* MODAL POPUP */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); backdrop-filter:blur(10px); display:none; justify-content:center; align-items:center; z-index:9999; }
+        .modal-box { background:#151515; width:90%; max-width:380px; padding:35px; border-radius:30px; border:1px solid #333; text-align:center; }
+        .modal-overlay.active { display:flex; }
+        .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 15px; color: #ff4d4d; }
+        .modal-desc { font-size: 14px; color: #888; margin-bottom: 30px; line-height: 1.5; }
+        .modal-btns { display: flex; gap: 15px; }
+        .m-btn { flex: 1; padding: 15px; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; }
+        .btn-cancel { background: #252525; color: #fff; }
+        .btn-reset { background: var(--red); color: #fff; }
+
+        .reset-trigger { margin-top: 20px; font-size: 12px; color: var(--gold); cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="home.html" class="back-btn">← Back to Home</a>
+        <div class="wallet-display">Wallet: $<span id="currentBal">0.00</span></div>
+    </div>
+
+    <div class="card" id="inputCard">
+        <div class="card-header"><h2>Daily Earn 3% Plan</h2></div>
+        <div class="rules-box">
+            <p>• Earn <b>3% Profit</b> every 24 hours.</p>
+            <p>• Capital will remain <b>Frozen</b> during the cycle.</p>
+            <p>• Returns are credited <b>automatically</b>.</p>
+        </div>
+        <input type="number" id="investAmount" placeholder="Enter Amount ($)">
+        <button id="mainSubBtn" class="sub-btn" onclick="startStaking()">Subscribe Now</button>
+    </div>
+
+    <div class="card" id="liveAssetCard">
+        <div class="live-label">LIVE STAKING PROGRESS</div>
+        <div class="live-value" id="liveVal">$0.000000</div>
+        <div style="font-size: 14px; color: #888; margin-bottom: 20px;">
+            Principal Locked: <span id="lockedAmt" style="color:var(--gold)">$0.00</span>
+        </div>
+        <div class="timer-badge" id="timer">24:00:00</div>
+    </div>
+
+    <div class="reset-trigger" onclick="openResetModal()">Stop Profit / Reset</div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <div class="modal-title">Warning!</div>
+            <p class="modal-desc">Are you sure you want to reset? If you have an active investment, your funds will not be returned. Use this only for errors.</p>
+            <div class="modal-btns">
+                <button class="m-btn btn-cancel" onclick="closeResetModal()">Cancel</button>
+                <button class="m-btn btn-reset" onclick="forceReset()">Yes, Reset</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- Firebase Configuration ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
+        authDomain: "ludo-joy-fb32d.firebaseapp.com",
+        databaseURL: "https://ludo-joy-fb32d-default-rtdb.firebaseio.com",
+        projectId: "ludo-joy-fb32d",
+        storageBucket: "ludo-joy-fb32d.firebasestorage.app",
+        messagingSenderId: "128560388256",
+        appId: "1:128560388256:web:a8b945a3658160277391c5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    let userData = null;
+    let trackerInterval = null;
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            db.ref('users/' + user.uid).on('value', (snapshot) => {
+                userData = snapshot.val();
+                if (userData) {
+                    document.getElementById('currentBal').innerText = Number(userData.wallet || 0).toFixed(2);
+                    checkStakingStatus();
+                }
+            });
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    function checkStakingStatus() {
+        if(userData.activeInvest) {
+            document.getElementById('inputCard').style.display = 'none';
+            document.getElementById('liveAssetCard').style.display = 'block';
+            document.getElementById('lockedAmt').innerText = "$" + userData.activeInvest.amt.toFixed(2);
+            startTracker();
+        } else {
+            document.getElementById('inputCard').style.display = 'block';
+            document.getElementById('liveAssetCard').style.display = 'none';
+            if(trackerInterval) clearInterval(trackerInterval);
+        }
+    }
+
+    function startStaking() {
+        let amt = parseFloat(document.getElementById('investAmount').value);
+        if(!amt || amt <= 0) return alert("Enter valid amount.");
+        if(amt > userData.wallet) return alert("Insufficient balance.");
+
+        const startTime = Date.now();
+        const investData = {
+            amt: amt,
+            start: startTime,
+            end: startTime + (24 * 60 * 60 * 1000)
+        };
+
+        // Database updates
+        db.ref('users/' + auth.currentUser.uid).update({
+            wallet: userData.wallet - amt,
+            activeInvest: investData
+        }).then(() => {
+            alert("Subscription successful!");
+        });
+    }
+
+    function startTracker() {
+        if(trackerInterval) clearInterval(trackerInterval);
+        trackerInterval = setInterval(() => {
+            const now = Date.now();
+            const plan = userData.activeInvest;
+            const dist = plan.end - now;
+
+            if (dist <= 0) {
+                clearInterval(trackerInterval);
+                finishStaking();
+            } else {
+                let timePassed = now - plan.start;
+                let totalTime = 24 * 60 * 60 * 1000;
+                let profit = plan.amt + ((timePassed / totalTime) * (plan.amt * 0.03));
+                document.getElementById('liveVal').innerText = "$" + profit.toFixed(6);
+
+                let h = Math.floor((dist / (1000 * 60 * 60)) % 24);
+                let m = Math.floor((dist / (1000 * 60)) % 60);
+                let s = Math.floor((dist / 1000) % 60);
+                document.getElementById('timer').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            }
+        }, 1000);
+    }
+
+    function finishStaking() {
+        const totalReturn = userData.activeInvest.amt * 1.03;
+        db.ref('users/' + auth.currentUser.uid).update({
+            wallet: userData.wallet + totalReturn,
+            activeInvest: null
+        }).then(() => {
+            alert("Cycle Completed! Profit added.");
+        });
+    }
+
+    function forceReset() {
+        db.ref('users/' + auth.currentUser.uid + '/activeInvest').remove().then(() => {
+            closeResetModal();
+            location.reload();
+        });
+    }
+
+    function openResetModal() { document.getElementById('modalOverlay').classList.add('active'); }
+    function closeResetModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+</script>
+</body>
+</html>

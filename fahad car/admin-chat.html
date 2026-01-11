@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Chat Control | Golden Hub</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        :root { --gold: #ffd700; --red: #ff4d4d; --green: #00ff88; --bg: #050505; --card: #121212; --input: #0a0a0a; --border: #222; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: white; margin: 0; padding: 0; overflow: hidden; }
+
+        .chat-main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: 100vh;
+        }
+
+        /* Left Sidebar: User List */
+        .sidebar {
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+        .sidebar-header h2 { color: var(--gold); margin: 0; font-size: 18px; text-transform: uppercase; }
+        
+        #chatUsersContainer {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .user-item {
+            padding: 15px;
+            border-bottom: 1px solid #1a1a1a;
+            cursor: pointer;
+            position: relative;
+            transition: 0.3s;
+        }
+        .user-item:hover { background: #1a1a1a; }
+        .user-item.active { background: #222; border-left: 4px solid var(--gold); }
+        .user-item .email { font-weight: bold; font-size: 14px; display: block; overflow: hidden; text-overflow: ellipsis; }
+        .user-item .uid { font-size: 10px; color: #666; }
+        .notif-dot {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--red);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--red);
+        }
+
+        /* Right Side: Chat Box */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+        }
+        .chat-header {
+            padding: 15px 25px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h3 { margin: 0; color: var(--gold); }
+
+        #adminMainChatBox {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* WhatsApp pattern style */
+        }
+
+        /* Message Bubbles */
+        .msg {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+        }
+        .msg.admin {
+            align-self: flex-end;
+            background: var(--gold);
+            color: #000;
+            border-bottom-right-radius: 2px;
+        }
+        .msg.user {
+            align-self: flex-start;
+            background: #222;
+            color: #fff;
+            border-bottom-left-radius: 2px;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 20px;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
+        .input-area input {
+            flex: 1;
+            background: var(--input);
+            border: 1px solid #333;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            outline: none;
+        }
+        .input-area input:focus { border-color: var(--gold); }
+        .send-btn {
+            background: var(--gold);
+            color: black;
+            border: none;
+            padding: 0 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        
+        .placeholder-text {
+            display: flex;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            color: #444;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-main-container">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>User Chats</h2>
+        </div>
+        <div id="chatUsersContainer">
+            </div>
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-header">
+            <h3 id="currentUserTitle">Select a User</h3>
+            <button onclick="location.reload()" style="background:none; border:none; color:var(--gold); cursor:pointer;">Reload</button>
+        </div>
+
+        <div id="adminMainChatBox">
+            <div class="placeholder-text">Click on a user to start messaging</div>
+        </div>
+
+        <div class="input-area" id="inputContainer" style="display: none;">
+            <input type="text" id="adminReplyMsg" placeholder="Type a message..." onkeypress="handleEnter(event)">
+            <button class="send-btn" onclick="sendAdminReply()">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
+        databaseURL: "https://ludo-joy-fb32d-default-rtdb.firebaseio.com",
+        projectId: "ludo-joy-fb32d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let selectedUID = "";
+    const notifSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3');
+
+    // 1. Listen for users who have messaged
+    db.ref('admin_notifications').on('value', snap => {
+        const container = document.getElementById('chatUsersContainer');
+        const users = snap.val() || {};
+        
+        // Agar naya message aaye to sound bajayein
+        container.innerHTML = "";
+        
+        Object.keys(users).forEach(uid => {
+            const data = users[uid];
+            
+            // Get user email
+            db.ref('users/' + uid + '/email').once('value', emailSnap => {
+                const email = emailSnap.val() || "Unknown User";
+                const isUnread = data.unread > 0;
+                
+                const userDiv = document.createElement('div');
+                userDiv.className = `user-item ${uid === selectedUID ? 'active' : ''}`;
+                userDiv.onclick = () => selectUser(uid, email);
+                
+                userDiv.innerHTML = `
+                    <span class="email">${email}</span>
+                    <span class="uid">${uid}</span>
+                    ${isUnread ? '<div class="notif-dot"></div>' : ''}
+                `;
+                
+                container.prepend(userDiv); // Newest on top
+                
+                if(isUnread && uid !== selectedUID) {
+                    notifSound.play().catch(e => console.log("Sound blocked by browser"));
+                }
+            });
+        });
+    });
+
+    // 2. Select User Function
+    function selectUser(uid, email) {
+        selectedUID = uid;
+        document.getElementById('currentUserTitle').innerText = email;
+        document.getElementById('inputContainer').style.display = "flex";
+        
+        // Reset Notification
+        db.ref('admin_notifications/' + uid).update({ unread: 0 });
+        
+        // Highlight active user in UI
+        const items = document.querySelectorAll('.user-item');
+        items.forEach(i => i.classList.remove('active'));
+        
+        loadMessages(uid);
+    }
+
+    // 3. Load Messages
+    function loadMessages(uid) {
+        db.ref('chats/' + uid).on('value', snap => {
+            if(uid !== selectedUID) return;
+            
+            const box = document.getElementById('adminMainChatBox');
+            box.innerHTML = "";
+            
+            snap.forEach(child => {
+                const m = child.val();
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `msg ${m.sender === 'admin' ? 'admin' : 'user'}`;
+                msgDiv.innerText = m.text;
+                box.appendChild(msgDiv);
+            });
+            
+            box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    // 4. Send Reply
+    function sendAdminReply() {
+        const input = document.getElementById('adminReplyMsg');
+        const text = input.value.trim();
+        
+        if(!text || !selectedUID) return;
+
+        db.ref('chats/' + selectedUID).push({
+            sender: 'admin',
+            text: text,
+            timestamp: Date.now()
+        });
+
+        // User side notification trigger
+        db.ref('notifications/' + selectedUID).update({ unread: 1 });
+
+        input.value = "";
+    }
+
+    function handleEnter(e) {
+        if(e.key === 'Enter') sendAdminReply();
+    }
+</script>
+
+</body>
+</html>
