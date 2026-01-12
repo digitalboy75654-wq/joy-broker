@@ -3,263 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Golden Hub | Master Admin</title>
-    
+    <title>Elite Hub | Ultra Admin Panel V3 Fixed</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
-    .admin-nav-container {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        display: flex;
-        gap: 15px;
-    }
+        :root { --gold: #FFD700; --dark-bg: #080808; --card-bg: #141414; --text-main: #ffffff; --text-dim: #a0a0a0; --accent: #00e676; --danger: #ff3d00; --blue: #2979ff; }
+        * { box-sizing: border-box; font-family: 'Outfit', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--dark-bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-    .btn-admin-chat {
-        background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
-        color: #000;
-        border: none;
-        padding: 12px 25px;
-        font-size: 14px;
-        font-weight: bold;
-        border-radius: 50px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        position: relative;
-    }
+        .sidebar { width: 280px; background: var(--card-bg); border-right: 1px solid #222; display: flex; flex-direction: column; padding: 25px; }
+        .brand { font-size: 24px; font-weight: 800; color: var(--gold); text-align: center; margin-bottom: 40px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .nav-item { padding: 14px 18px; color: var(--text-dim); cursor: pointer; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; font-weight: 500; transition: 0.3s; }
+        .nav-item:hover, .nav-item.active { background: rgba(255, 215, 0, 0.1); color: var(--gold); }
 
-    .btn-admin-chat:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
-    }
+        .viewport { flex: 1; overflow-y: auto; padding: 30px; }
+        .grid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .card-stat { background: var(--card-bg); padding: 25px; border-radius: 20px; border: 1px solid #1a1a1a; text-align: center; }
+        .card-stat p { font-size: 30px; font-weight: 800; color: var(--gold); margin-top: 5px; }
 
-    /* Notification Badge Style */
-    #adminNotifBadge {
-        display: none; /* Default hidden */
-        position: absolute;
-        top: -8px;
-        left: -5px;
-        background: #ff0000;
-        color: white;
-        border: 2px solid #fff;
-        border-radius: 50%;
-        min-width: 22px;
-        height: 22px;
-        font-size: 11px;
-        font-weight: bold;
-        text-align: center;
-        line-height: 18px;
-        box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-    }
+        .box-req { background: #0f0f0f; border: 1px solid #1a1a1a; border-radius: 20px; padding: 20px; margin-bottom: 15px; }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #151515; padding-bottom: 5px; font-size: 14px; }
+        .data-row .key { color: var(--text-dim); }
+        .data-row .val { color: #fff; font-weight: 600; }
 
-    /* Pulse Animation jab message aaye */
-    .pulse-animation {
-        animation: admin-glow 1.5s infinite;
-    }
+        .chat-wrapper { display: flex; height: calc(100vh - 160px); background: #0c0c0c; border-radius: 24px; overflow: hidden; border: 1px solid #1a1a1a; }
+        .chat-list { width: 320px; background: var(--card-bg); border-right: 1px solid #1a1a1a; overflow-y: auto; }
+        .user-node { padding: 15px; border-bottom: 1px solid #151515; cursor: pointer; position: relative; }
+        .user-node.active { background: #1a1a1a; border-left: 4px solid var(--gold); }
+        .dot-new { width: 10px; height: 10px; background: #ff3d00; border-radius: 50%; position: absolute; right: 15px; top: 20px; display: none; box-shadow: 0 0 8px red; }
+        .chat-feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #080808; }
+        .bubble { padding: 10px 15px; border-radius: 15px; max-width: 70%; font-size: 14px; }
+        .bubble.admin { align-self: flex-end; background: var(--gold); color: #000; }
+        .bubble.user { align-self: flex-start; background: #222; color: #fff; }
 
-    @keyframes admin-glow {
-        0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
-        70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
-    }
-</style>
+        .hist-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        .hist-table th { color: var(--gold); text-align: left; padding: 10px; border-bottom: 1px solid #333; }
+        .hist-table td { padding: 10px; border-bottom: 1px solid #1a1a1a; }
 
-<div class="admin-nav-container">
-    <div style="position: relative;">
-        <span id="adminNotifBadge">0</span>
-        
-        <button onclick="window.location.href='admin-chat.html'" id="adminChatBtn" class="btn-admin-chat">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            Customer Messages
-        </button>
-    </div>
-</div>
+        .input-glass { width: 100%; padding: 12px; background: #151515; border: 1px solid #222; border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; }
+        .btn-action { padding: 10px 15px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 12px; }
+        .btn-gold { background: var(--gold); color: #000; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-blue { background: var(--blue); color: #fff; }
 
-<script>
-    
-    // Firebase Database Reference
-    const adminDb = firebase.database();
-
-    function listenForCustomerMessages() {
-        // 'admin_notifications' path ko monitor karna
-        adminDb.ref('admin_notifications').on('value', (snapshot) => {
-            let totalUnread = 0;
-            const data = snapshot.val();
-
-            if (data) {
-                // Har user ki notification check karein
-                Object.keys(data).forEach(uid => {
-                    if (data[uid].unread > 0) {
-                        totalUnread += data[uid].unread;
-                    }
-                });
-            }
-
-            const badge = document.getElementById('adminNotifBadge');
-            const btn = document.getElementById('adminChatBtn');
-
-            if (totalUnread > 0) {
-                // Agar koi naya message hai
-                badge.innerText = totalUnread;
-                badge.style.display = 'block';
-                btn.classList.add('pulse-animation'); // Button ko glow karwao
-                
-                // Optional: Sound play karein (Browser permission zaruri hai)
-                // new Audio('https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3').play();
-            } else {
-                // Agar sab dekh liye hain
-                badge.style.display = 'none';
-                btn.classList.remove('pulse-animation');
-            }
-        });
-    }
-
-    // Page load hote hi notification check shuru karein
-    window.onload = function() {
-        listenForCustomerMessages();
-    };
-</script>
-
-    <style>
-        :root { --gold: #ffd700; --red: #ff4d4d; --green: #00ff88; --bg: #050505; --card: #121212; --input: #0a0a0a; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: white; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; }
-        h1, h2, h3 { color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-
-        /* Stats Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .stat-box { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #222; text-align: center; }
-
-        /* Manage Deposit Addresses */
-        .admin-box { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid #222; margin-bottom: 30px; }
-        .address-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; }
-        .addr-input-group label { display: block; font-size: 13px; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
-        .input-field { width: 100%; padding: 12px; background: var(--input); border: 1px solid #333; color: #fff; border-radius: 8px; outline: none; }
-        .input-field:focus { border-color: var(--gold); }
-        .btn-gold { width: 100%; margin-top: 20px; background: var(--gold); color: #000; padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
-
-        /* Requests Section */
-        .grid-requests { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        .req-container { height: 350px; overflow-y: auto; background: var(--input); padding: 15px; border-radius: 12px; border: 1px solid #222; }
-        .req-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid var(--gold); position: relative; }
-        .req-card p { margin: 5px 0; font-size: 13px; }
-
-        /* Registered Users Table */
-        .search-bar { width: 100%; padding: 15px; background: var(--input); border: 1px solid #333; color: white; border-radius: 10px; margin-bottom: 20px; }
-        .user-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .user-table th { text-align: left; padding: 15px; color: var(--gold); border-bottom: 1px solid #333; font-size: 14px; }
-        .user-table td { padding: 15px; border-bottom: 1px solid #222; font-size: 14px; }
-        
-        .status-active { color: var(--green); font-weight: bold; }
-        .status-blocked { color: var(--red); font-weight: bold; }
-        
-        .btn-sm { padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; margin-right: 5px; }
-        .btn-review { background: #333; color: white; }
-        .btn-block { background: white; color: black; }
-        .btn-approve { background: var(--green); color: black; }
-        .btn-reject { background: var(--red); color: white; }
-
-        /* --- MODAL STYLING --- */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); overflow-y: auto; }
-        .modal-content { background: var(--card); margin: 2% auto; padding: 30px; width: 95%; max-width: 550px; border-radius: 15px; border: 1px solid var(--gold); position: relative; }
-        .close-btn { position: absolute; right: 20px; top: 15px; color: var(--gold); font-size: 28px; cursor: pointer; }
-        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222; }
-        .detail-row b { color: var(--gold); }
-
-        /* Chat Inside Modal */
-        .chat-container { margin-top: 20px; background: #000; border-radius: 10px; padding: 10px; border: 1px solid #333; }
-        .chat-box { height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 5px; }
-        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
-        .msg.admin { align-self: flex-end; background: var(--gold); color: #000; }
-        .msg.user { align-self: flex-start; background: #222; color: #fff; }
-
-        @media (max-width: 768px) { .grid-requests { grid-template-columns: 1fr; } }
+        #loginGate { position: fixed; inset: 0; background: var(--dark-bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        #toast { position: fixed; top: 20px; right: 20px; background: var(--gold); color: #000; padding: 15px 30px; border-radius: 12px; font-weight: bold; display: none; z-index: 10000; }
     </style>
 </head>
 <body>
 
-    
-    
-<div class="container">
-    <h1>Admin Master Control</h1>
+<div id="toast">Notification!</div>
+<audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
-    <div class="stats-grid">
-        <div class="stat-box"><h2 id="statUsers">0</h2><p>Total Users</p></div>
-        <div class="stat-box"><h2 id="statDep" style="color: var(--gold);">0</h2><p>Pending Deposits</p></div>
-        <div class="stat-box"><h2 id="statWith" style="color: var(--red);">0</h2><p>Pending Withdraws</p></div>
+<div id="loginGate">
+    <div style="background: var(--card-bg); padding: 40px; border-radius: 30px; width: 380px; text-align: center; border: 1px solid #222;">
+        <h2 style="color:var(--gold); margin-bottom: 25px;">ADMIN PANEL</h2>
+        <input type="email" id="admE" class="input-glass" placeholder="Admin Email">
+        <input type="password" id="admP" class="input-glass" placeholder="Password">
+        <button class="btn-action btn-gold" style="width: 100%; height: 45px;" onclick="doLogin()">Authorize</button>
+    </div>
+</div>
+
+<div class="sidebar">
+    <div class="brand"><i class="fas fa-shield-alt"></i> ELITE HUB</div>
+    <div class="nav-item active" onclick="showTab('dash', this)"><i class="fas fa-home"></i> Dashboard</div>
+    <div class="nav-item" onclick="showTab('users', this)"><i class="fas fa-user-friends"></i> User Manager</div>
+    <div class="nav-item" onclick="showTab('chat', this)"><i class="fas fa-comment-dots"></i> Support Chat</div>
+    <div class="nav-item" onclick="showTab('set', this)"><i class="fas fa-cog"></i> Wallet Settings</div>
+    <div class="nav-item" onclick="logout()" style="margin-top:auto; color:var(--danger)"><i class="fas fa-sign-out-alt"></i> Logout</div>
+</div>
+
+<div class="viewport">
+    <div id="tab-dash" class="tab-pane">
+        <div class="grid-stats">
+            <div class="card-stat"><h3>Total Users</h3><p id="st-u">0</p></div>
+            <div class="card-stat"><h3>Pending Dep.</h3><p id="st-d">0</p></div>
+            <div class="card-stat"><h3>Pending With.</h3><p id="st-w">0</p></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div><h3>Deposit Requests</h3><div id="depView" style="margin-top:15px;"></div></div>
+            <div><h3>Withdrawal Requests</h3><div id="withView" style="margin-top:15px;"></div></div>
+        </div>
     </div>
 
-    <div class="admin-box">
-        <h3>⚙️ Manage Deposit Addresses</h3>
-        <div class="address-grid">
-            <div class="addr-input-group"><label>USDT (TRC20)</label><input type="text" id="trc20" class="input-field"></div>
-            <div class="addr-input-group"><label>USDT (BEP20)</label><input type="text" id="bep20" class="input-field"></div>
-            <div class="addr-input-group"><label>USDT (ERC20)</label><input type="text" id="erc20" class="input-field"></div>
-            <div class="addr-input-group"><label>USDT (Polygon)</label><input type="text" id="poly" class="input-field"></div>
-        </div>
-        <button class="btn-gold" onclick="saveAddresses()">Update All Addresses</button>
-    </div>
-
-    <div class="grid-requests">
-        <div>
-            <h3>📥 Deposit Requests</h3>
-            <div id="depList" class="req-container">Loading...</div>
-        </div>
-        <div>
-            <h3>📤 Withdraw Requests</h3>
-            <div id="withList" class="req-container">Loading...</div>
-        </div>
-    </div>
-
-    <div class="admin-box">
-        <h3>👥 Registered Users</h3>
-        <input type="text" id="userSearch" class="search-bar" onkeyup="searchUsers()" placeholder="Search by Email or ID...">
-        
-        <div style="overflow-x: auto;">
-            <table class="user-table">
-                <thead>
-                    <tr>
-                        <th>User Details</th>
-                        <th>Wallet Balance</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
+    <div id="tab-users" class="tab-pane" style="display:none;">
+        <input type="text" class="input-glass" id="uSearch" onkeyup="searchU()" placeholder="Search User...">
+        <div style="background:var(--card-bg); border-radius:20px; overflow:hidden; border:1px solid #1a1a1a;">
+            <table style="width:100%; border-collapse: collapse; text-align: left;">
+                <thead style="background:#1a1a1a; color:var(--gold);">
+                    <tr><th style="padding:15px;">User Info</th><th>Balance</th><th>Status</th><th>Control</th></tr>
                 </thead>
-                <tbody id="userTableBody"></tbody>
+                <tbody id="uTableBody"></tbody>
             </table>
+        </div>
+    </div>
+
+    <div id="tab-chat" class="tab-pane" style="display:none;">
+        <div class="chat-wrapper">
+            <div class="chat-list" id="chatListSide"></div>
+            <div class="chat-main" style="flex:1; display:flex; flex-direction:column;">
+                <div id="chatUserInfo" style="padding:15px; background:#111; border-bottom:1px solid #222; font-weight:bold; color:var(--gold);">Select a User</div>
+                <div class="chat-feed" id="chatDisplay"></div>
+                <div style="padding:15px; display:flex; gap:10px; background:#111;">
+                    <input type="text" id="msgInp" class="input-glass" style="margin:0;" placeholder="Reply...">
+                    <button class="btn-action btn-gold" onclick="postMsg()">SEND</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-set" class="tab-pane" style="display:none;">
+        <div style="max-width:500px; background:var(--card-bg); padding:25px; border-radius:20px; border:1px solid #222;">
+            <h3>Update Admin Wallets</h3><br>
+            <label>TRON (TRC20)</label><input type="text" id="s_tron" class="input-glass">
+            <label>BINANCE (BEP20)</label><input type="text" id="s_bnc" class="input-glass">
+            <label>ETHEREUM (ERC20)</label><input type="text" id="s_eth" class="input-glass">
+            <label>POLYGON (POL)</label><input type="text" id="s_pol" class="input-glass">
+            <button class="btn-action btn-gold" style="width:100%" onclick="saveSet()">Update All</button>
         </div>
     </div>
 </div>
 
-<div id="reviewModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-        <h2 style="color:var(--gold)">User Review & Support</h2>
-        <div id="modalBody"></div>
-        
-        <div class="chat-container">
-            <h4 style="margin:0 0 10px 0; color:var(--gold)">Live Chat</h4>
-            <div id="chatBox" class="chat-box"></div>
-            <div style="display:flex; gap:5px; margin-top:10px;">
-                <input type="text" id="adminMsg" class="input-field" placeholder="Reply to user..." style="margin:0;">
-                <button class="btn-sm btn-approve" onclick="sendReply()">Send</button>
-            </div>
+<div id="profilePop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:10000; padding:30px;">
+    <div style="max-width:850px; margin:auto; background:var(--card-bg); border-radius:25px; padding:30px; border:1px solid var(--gold); max-height: 90vh; overflow-y:auto;">
+        <button onclick="closePop()" style="float:right; color:#fff; background:none; border:none; font-size:25px; cursor:pointer;">&times;</button>
+        <h2 id="pop_name">User Details</h2>
+        <p id="pop_mail" style="color:var(--text-dim)"></p>
+        <div class="grid-stats" style="margin-top:20px;">
+            <div class="card-stat"><h3>Balance</h3><p id="pop_bal">$0</p></div>
+            <div class="card-stat"><h3>Total Deposit</h3><p id="pop_dep" style="color:var(--accent)">$0</p></div>
+            <div class="card-stat"><h3>Total Withdraw</h3><p id="pop_with" style="color:var(--danger)">$0</p></div>
         </div>
-
-        <div style="margin-top:20px;">
-            <button class="btn-sm btn-approve" style="width:100%; margin-bottom:10px;" onclick="promptWalletUpdate()">Update Wallet Balance</button>
+        <div id="pop_profit_box" style="padding:15px; background:#000; border-radius:12px; margin-bottom:20px; text-align:center;">
+            <h3>Net Profit/Loss: <span id="pop_net">$0</span></h3>
         </div>
+        <h3>Transaction History</h3>
+        <table class="hist-table">
+            <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th><th>Details</th></tr></thead>
+            <tbody id="pop_history"></tbody>
+        </table>
     </div>
 </div>
 
@@ -270,198 +156,254 @@
         projectId: "ludo-joy-fb32d",
         appId: "1:128560388256:web:a8b945a3658160277391c5"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
+    let selChatUID = "";
 
-    let currentReviewUID = "";
+    function doLogin() {
+        const e = document.getElementById('admE').value;
+        const p = document.getElementById('admP').value;
+        if(e !== "digitalboy75654@gmail.com") return alert("Access Denied");
+        auth.signInWithEmailAndPassword(e,p).catch(err => alert(err.message));
+    }
 
-    function init() {
-        // Fetch Addresses
-        db.ref('adminSettings/addresses').once('value', s => {
-            const d = s.val();
-            if(d) {
-                document.getElementById('trc20').value = d.trc20 || "";
-                document.getElementById('bep20').value = d.bep20 || "";
-                document.getElementById('erc20').value = d.erc20 || "";
-                document.getElementById('poly').value = d.poly || "";
-            }
-        });
+    auth.onAuthStateChanged(user => {
+        if(user && user.email === "digitalboy75654@gmail.com") {
+            document.getElementById('loginGate').style.display = 'none';
+            initMain();
+        }
+    });
 
-        // Sync Deposits
-        db.ref('depositRequests').on('value', snap => {
-            const list = document.getElementById('depList');
-            list.innerHTML = ""; let count = 0;
-            snap.forEach(child => {
-                const req = child.val();
-                if(req.status === 'pending') {
-                    count++;
-                    list.innerHTML += `
-                    <div class="req-card">
-                        <p><b>User:</b> ${req.email || 'Unknown'}</p>
-                        <p style="color:#666; font-size:11px">UID: ${req.uid}</p>
-                        <p><b>TID:</b> ${req.tid}</p>
-                        <input type="number" id="amt_${child.key}" class="input-field" style="margin:10px 0" placeholder="Enter Amount">
-                        <button class="btn-sm btn-approve" onclick="approveDep('${child.key}', '${req.uid}')">Approve</button>
-                        <button class="btn-sm btn-reject" onclick="rejectReq('depositRequests', '${child.key}')">Reject</button>
-                    </div>`;
-                }
+    // --- FIX 1: Identified Wallet Name Logic ---
+    function identifyWallet(addr, name) {
+        if(name && name !== "Crypto" && name !== "Crypto Wallet") return name;
+        if(!addr) return "Crypto Wallet";
+        if(addr.startsWith('T')) return "USDT (TRC20)";
+        if(addr.startsWith('0x')) return "USDT (BEP20/ERC20)";
+        return "Crypto Wallet";
+    }
+
+    function initMain() {
+        db.ref('users').on('value', snap => {
+            const body = document.getElementById('uTableBody');
+            const side = document.getElementById('chatListSide');
+            body.innerHTML = ""; side.innerHTML = "";
+            let uCount = 0;
+            snap.forEach(c => {
+                const u = c.val(); const uid = c.key; uCount++;
+                body.innerHTML += `<tr>
+                    <td style="padding:15px;"><b>${u.name || 'User'}</b><br><small>${u.email}</small></td>
+                    <td>$${u.wallet || 0}</td>
+                    <td style="color:${u.status==='blocked'?'red':'var(--accent)'}">${u.status || 'Active'}</td>
+                    <td>
+                        <button class="btn-action btn-blue" onclick="openProfile('${uid}')">View Profile</button>
+                        <button class="btn-action btn-danger" onclick="toggleBlock('${uid}','${u.status}')">Status</button>
+                    </td>
+                </tr>`;
+                side.innerHTML += `<div class="user-node" id="chat_${uid}" onclick="openChat('${uid}','${u.name || u.email}')">
+                    <b>${u.name || 'Member'}</b><br><small>${u.email}</small>
+                    <div class="dot-new" id="dot_${uid}"></div>
+                </div>`;
             });
-            document.getElementById('statDep').innerText = count;
+            document.getElementById('st-u').innerText = uCount;
         });
 
-        // Sync Withdrawals (Fixed Tags)
-        db.ref('withdrawRequests').on('value', snap => {
-            const list = document.getElementById('withList');
-            list.innerHTML = ""; let count = 0;
-            snap.forEach(child => {
-                const req = child.val();
-                if(req.status === 'pending') {
+        // Load existing wallets into inputs
+        db.ref('adminWallets').on('value', s => {
+            const d = s.val() || {};
+            document.getElementById('s_tron').value = d.tron || "";
+            document.getElementById('s_bnc').value = d.bnc || "";
+            document.getElementById('s_eth').value = d.eth || "";
+            document.getElementById('s_pol').value = d.pol || "";
+        });
+
+        db.ref('depositRequests').on('value', snap => {
+            const view = document.getElementById('depView'); view.innerHTML = "";
+            let count = 0;
+            snap.forEach(c => {
+                const r = c.val(); if(r.status === 'pending') {
                     count++;
-                    list.innerHTML += `
-                    <div class="req-card" style="border-left-color: var(--red);">
-                        <p><b>User:</b> ${req.email || 'Unknown'}</p>
-                        <p><b>Amount:</b> $${req.requestedAmount || req.amount}</p>
-                        <p><b>Address:</b> <small>${req.walletAddress || req.address}</small></p>
-                        <p><b>Network:</b> ${req.network}</p>
-                        <div style="margin-top:10px;">
-                            <button class="btn-sm btn-approve" onclick="approveWith('${child.key}')">Mark Completed</button>
-                            <button class="btn-sm btn-reject" onclick="rejectReq('withdrawRequests', '${child.key}')">Reject</button>
+                    view.innerHTML += `<div class="box-req">
+                        <div class="data-row"><span class="key">User:</span><span class="val">${r.email}</span></div>
+                        <div class="data-row"><span class="key">TID:</span><span class="val" style="color:var(--gold)">${r.tid}</span></div>
+                        <div class="data-row"><span class="key">Requested:</span><span class="val">$${r.amount}</span></div>
+                        <input type="number" id="inp_${c.key}" class="input-glass" style="margin-top:10px;" placeholder="Amount to add">
+                        <div style="display:flex; gap:10px; margin-top:5px;">
+                            <button class="btn-action btn-gold" onclick="approveD('${c.key}','${r.uid}')">Approve</button>
+                            <button class="btn-action btn-danger" onclick="rejectReq('depositRequests','${c.key}')">Reject</button>
                         </div>
                     </div>`;
                 }
             });
-            document.getElementById('statWith').innerText = count;
+            document.getElementById('st-d').innerText = count;
         });
 
-        // Sync Users
-        db.ref('users').on('value', snap => {
-            const table = document.getElementById('userTableBody');
-            table.innerHTML = ""; let uCount = 0;
-            snap.forEach(child => {
-                uCount++;
-                const u = child.val();
-                const statusClass = u.status === 'blocked' ? 'status-blocked' : 'status-active';
-                table.innerHTML += `
-                <tr>
-                    <td><b>${u.email}</b><br><small style="color:#666">${child.key}</small></td>
-                    <td><b>$${u.wallet || 0}</b></td>
-                    <td class="${statusClass}">${u.status || 'Active'}</td>
-                    <td>
-                        <button class="btn-sm btn-review" onclick="openReview('${child.key}')">Review</button>
-                        <button class="btn-sm btn-block" onclick="toggleBlock('${child.key}', '${u.status}')">
-                            ${u.status === 'blocked' ? 'Unblock' : 'Block'}
-                        </button>
-                    </td>
-                </tr>`;
+        db.ref('withdrawRequests').on('value', snap => {
+            const view = document.getElementById('withView'); view.innerHTML = "";
+            let count = 0;
+            snap.forEach(c => {
+                const r = c.val(); if(r.status === 'pending') {
+                    count++;
+                    const refAmt = r.requestedAmount || r.amount;
+                    const walletDisp = identifyWallet(r.walletAddress || r.address, r.walletName || r.network);
+                    view.innerHTML += `<div class="box-req">
+                        <div class="data-row"><span class="key">Name:</span><span class="val">${r.name || 'User'}</span></div>
+                        <div class="data-row"><span class="key">Email:</span><span class="val">${r.email}</span></div>
+                        <div class="data-row"><span class="key">Wallet:</span><span class="val" style="color:var(--gold)">${walletDisp}</span></div>
+                        <div class="data-row"><span class="key">Address:</span><span class="val">${r.walletAddress || r.address}</span></div>
+                        <div class="data-row"><span class="key">To Pay:</span><span class="val" style="font-size:18px; color:var(--accent)">$${r.receiveAmount || r.amount}</span></div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn-action btn-gold" style="flex:1" onclick="approveW('${c.key}')">Confirm Paid</button>
+                            <button class="btn-action btn-danger" onclick="rejectWithRefund('${c.key}','${r.uid}','${refAmt}')">Reject & Refund</button>
+                        </div>
+                    </div>`;
+                }
             });
-            document.getElementById('statUsers').innerText = uCount;
+            document.getElementById('st-w').innerText = count;
+        });
+
+        db.ref('chats').on('child_changed', snap => {
+            const uid = snap.key;
+            if(uid !== selChatUID) {
+                document.getElementById('dot_' + uid).style.display = 'block';
+                document.getElementById('notifSound').play();
+                const el = document.getElementById('chat_' + uid);
+                if(el) document.getElementById('chatListSide').prepend(el);
+            }
         });
     }
 
-    // Modal & Chat Functions
-    function openReview(uid) {
-        currentReviewUID = uid;
-        db.ref('users/'+uid).once('value', s => {
-            const u = s.val();
-            const body = document.getElementById('modalBody');
-            body.innerHTML = `
-                <div class="detail-row"><b>Email:</b> <span>${u.email}</span></div>
-                <div class="detail-row"><b>Balance:</b> <span style="color:var(--green)">$${u.wallet || 0}</span></div>
-                <div class="detail-row"><b>Profit/Loss:</b> <span>+$${u.profit || 0} / -$${u.loss || 0}</span></div>
-                <div class="detail-row"><b>Total Dep/With:</b> <span>$${u.totalDeposit || 0} / $${u.totalWithdraw || 0}</span></div>
-            `;
-            loadChat(uid);
-            document.getElementById('reviewModal').style.display = "block";
-        });
-    }
-
-    function loadChat(uid) {
-        db.ref('chats/'+uid).on('value', snap => {
-            const box = document.getElementById('chatBox');
-            box.innerHTML = "";
-            snap.forEach(child => {
-                const msg = child.val();
-                const cls = msg.sender === 'admin' ? 'admin' : 'user';
-                box.innerHTML += `<div class="msg ${cls}">${msg.text}</div>`;
-            });
-            box.scrollTop = box.scrollHeight;
-        });
-    }
-
-    function sendReply() {
-        const txt = document.getElementById('adminMsg').value;
-        if(txt) {
-            db.ref('chats/'+currentReviewUID).push({ sender: 'admin', text: txt, timestamp: Date.now() });
-            document.getElementById('adminMsg').value = "";
-        }
-    }
-
-    function closeModal() {
-        document.getElementById('reviewModal').style.display = "none";
-    }
-
-    function promptWalletUpdate() {
-        let amt = prompt("Enter new wallet balance:");
-        if(amt !== null && !isNaN(amt)) {
-            db.ref('users/'+currentReviewUID).update({ wallet: parseFloat(amt) }).then(() => {
-                alert("Updated!");
-                openReview(currentReviewUID);
-            });
-        }
-    }
-
-    function saveAddresses() {
+    // --- FIX 2: Wallet Setting Button Logic ---
+    function saveSet() {
         const data = {
-            trc20: document.getElementById('trc20').value,
-            bep20: document.getElementById('bep20').value,
-            erc20: document.getElementById('erc20').value,
-            poly: document.getElementById('poly').value
+            tron: document.getElementById('s_tron').value,
+            bnc: document.getElementById('s_bnc').value,
+            eth: document.getElementById('s_eth').value,
+            pol: document.getElementById('s_pol').value
         };
-        db.ref('adminSettings/addresses').set(data).then(() => alert("Addresses Updated!"));
+        db.ref('adminWallets').set(data)
+        .then(() => toast("System Wallets Updated!"))
+        .catch(e => alert("Error: " + e.message));
     }
 
-    function searchUsers() {
-        let filter = document.getElementById('userSearch').value.toUpperCase();
-        let rows = document.getElementById('userTableBody').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            rows[i].style.display = rows[i].innerText.toUpperCase().includes(filter) ? "" : "none";
-        }
-    }
-
-    function toggleBlock(uid, currentStatus) {
-        const newStatus = currentStatus === 'blocked' ? 'Active' : 'blocked';
-        db.ref('users/'+uid).update({ status: newStatus });
-    }
-
-    function approveDep(reqId, uid) {
-        const amt = parseFloat(document.getElementById('amt_'+reqId).value);
-        if(!amt) return alert("Please enter amount!");
-        db.ref('users/'+uid).once('value', s => {
-            let oldBal = parseFloat(s.val().wallet || 0);
-            let oldDep = parseFloat(s.val().totalDeposit || 0);
-            db.ref('users/'+uid).update({ 
-                wallet: (oldBal + amt).toFixed(2),
-                totalDeposit: (oldDep + amt).toFixed(2)
-            });
-            db.ref('depositRequests/'+reqId).update({ status: 'approved' });
+    function approveD(rid, uid) {
+        const amt = document.getElementById('inp_'+rid).value;
+        if(!amt) return alert("Enter amount to add");
+        db.ref('users/'+uid+'/wallet').once('value', s => {
+            let curr = parseFloat(s.val() || 0);
+            db.ref('users/'+uid).update({ wallet: (curr + parseFloat(amt)).toFixed(2) });
+            db.ref('depositRequests/'+rid).update({ status: 'approved', finalAmount: amt, date: new Date().toLocaleString() });
+            toast("Balance Added!");
         });
     }
 
-    function approveWith(reqId) {
-        if(confirm("Mark as completed?")) db.ref('withdrawRequests/'+reqId).update({ status: 'completed' });
+    function openProfile(uid) {
+        document.getElementById('profilePop').style.display = 'block';
+        const hist = document.getElementById('pop_history');
+        hist.innerHTML = "Fetching History...";
+        
+        db.ref('users/'+uid).once('value', s => {
+            const u = s.val() || {};
+            document.getElementById('pop_name').innerText = u.name || "User Profile";
+            document.getElementById('pop_mail').innerText = u.email;
+            document.getElementById('pop_bal').innerText = "$" + (parseFloat(u.wallet) || 0).toFixed(2);
+            
+            let tDep = 0, tWith = 0, rows = "";
+            
+            Promise.all([
+                db.ref('depositRequests').orderByChild('uid').equalTo(uid).once('value'),
+                db.ref('withdrawRequests').orderByChild('uid').equalTo(uid).once('value')
+            ]).then(res => {
+                res[0].forEach(d => {
+                    const v = d.val();
+                    const amt = parseFloat(v.finalAmount || v.amount || 0);
+                    if(v.status === 'approved') tDep += amt;
+                    rows += `<tr><td>${v.date || '---'}</td><td style="color:var(--accent)">DEP</td><td>$${amt.toFixed(2)}</td><td>${v.status}</td><td>TID: ${v.tid || 'N/A'}</td></tr>`;
+                });
+                res[1].forEach(w => {
+                    const v = w.val();
+                    const amt = parseFloat(v.amount || v.receiveAmount || 0);
+                    if(v.status === 'completed') tWith += amt;
+                    // FIX: Identify wallet in history
+                    const h_wallet = identifyWallet(v.walletAddress || v.address, v.walletName || v.network);
+                    rows += `<tr><td>${v.date || '---'}</td><td style="color:var(--danger)">WITH</td><td>$${amt.toFixed(2)}</td><td>${v.status}</td><td>${h_wallet}</td></tr>`;
+                });
+                
+                document.getElementById('pop_dep').innerText = "$" + tDep.toFixed(2);
+                document.getElementById('pop_with').innerText = "$" + tWith.toFixed(2);
+                
+                const net = (parseFloat(u.wallet || 0) + tWith) - tDep;
+                document.getElementById('pop_net').innerText = "$" + net.toFixed(2);
+                document.getElementById('pop_net').style.color = net >= 0 ? "var(--accent)" : "var(--danger)";
+                hist.innerHTML = rows || "<tr><td colspan='5' style='text-align:center'>No History Found</td></tr>";
+            });
+        });
     }
 
-    function rejectReq(path, id) {
-        if(confirm("Are you sure you want to reject?")) db.ref(path+'/'+id).update({ status: 'rejected' });
+    function approveW(rid) {
+        db.ref('withdrawRequests/'+rid).update({ status: 'completed', date: new Date().toLocaleString() });
+        toast("Withdrawal Completed!");
     }
 
-    window.onclick = function(event) {
-        if (event.target == document.getElementById('reviewModal')) closeModal();
+    function rejectWithRefund(rid, uid, amt) {
+        if(confirm("Reject and refund $"+amt+"?")) {
+            db.ref('users/'+uid+'/wallet').once('value', s => {
+                let curr = parseFloat(s.val() || 0);
+                db.ref('users/'+uid).update({ wallet: (curr + parseFloat(amt)).toFixed(2) });
+                db.ref('withdrawRequests/'+rid).update({ status: 'rejected', date: new Date().toLocaleString() });
+                toast("Refunded Successfully!");
+            });
+        }
     }
 
-    init();
+    function openChat(uid, info) {
+        selChatUID = uid;
+        document.getElementById('dot_'+uid).style.display = 'none';
+        document.getElementById('chatUserInfo').innerText = info;
+        document.querySelectorAll('.user-node').forEach(n => n.classList.remove('active'));
+        const activeNode = document.getElementById('chat_'+uid);
+        if(activeNode) activeNode.classList.add('active');
+        
+        db.ref('chats/'+uid).on('value', snap => {
+            const feed = document.getElementById('chatDisplay');
+            feed.innerHTML = "";
+            snap.forEach(c => {
+                const m = c.val();
+                feed.innerHTML += `<div class="bubble ${m.sender==='admin'?'admin':'user'}">${m.text}</div>`;
+            });
+            feed.scrollTop = feed.scrollHeight;
+        });
+    }
+
+    function postMsg() {
+        const txt = document.getElementById('msgInp').value;
+        if(txt && selChatUID) {
+            db.ref('chats/'+selChatUID).push({ sender: 'admin', text: txt, time: Date.now() });
+            document.getElementById('msgInp').value = "";
+        }
+    }
+
+    function toggleBlock(uid, s) { db.ref('users/'+uid).update({ status: s === 'blocked' ? 'Active' : 'blocked' }); }
+    function showTab(id, btn) {
+        document.querySelectorAll('.tab-pane').forEach(t => t.style.display = 'none');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('tab-'+id).style.display = 'block';
+        btn.classList.add('active');
+    }
+    function toast(m) {
+        const t = document.getElementById('toast'); t.innerText = m;
+        t.style.display = 'block'; setTimeout(() => t.style.display='none', 3000);
+    }
+    function closePop() { document.getElementById('profilePop').style.display = 'none'; }
+    function rejectReq(path, rid) { if(confirm("Reject?")) db.ref(path+'/'+rid).update({ status: 'rejected' }); }
+    function logout() { auth.signOut().then(() => location.reload()); }
+    function searchU() {
+        let q = document.getElementById('uSearch').value.toLowerCase();
+        let rows = document.getElementById('uTableBody').getElementsByTagName('tr');
+        for(let r of rows) r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none";
+    }
 </script>
 </body>
-
-</script>
 </html>
