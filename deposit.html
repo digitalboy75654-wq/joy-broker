@@ -74,16 +74,16 @@
     <h4 style="margin-bottom: 15px; color: #888; font-size: 14px; text-transform: uppercase;">Select Network</h4>
 
     <div class="grid">
-        <div class="asset-card" onclick="openPopup('USDT (TRC20)', 'trx_address')">
+        <div class="asset-card" onclick="openPopup('USDT (TRC20)', 'tron')">
             <span class="asset-name">Tron (TRC20)</span>
         </div>
-        <div class="asset-card" onclick="openPopup('USDT (BEP20)', 'apt_address')">
+        <div class="asset-card" onclick="openPopup('USDT (BEP20)', 'bnc')">
             <span class="asset-name">Binance (BEP20)</span>
         </div>
-        <div class="asset-card" onclick="openPopup('USDT (ERC20)', 'eth_address')">
+        <div class="asset-card" onclick="openPopup('USDT (ERC20)', 'eth')">
             <span class="asset-name">Ethereum (ERC20)</span>
         </div>
-        <div class="asset-card" onclick="openPopup('USDT (Polygon)', 'pol_address')">
+        <div class="asset-card" onclick="openPopup('USDT (Polygon)', 'pol')">
             <span class="asset-name">Polygon (POL)</span>
         </div>
     </div>
@@ -105,7 +105,6 @@
     </div>
 
 <script>
-    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
         authDomain: "ludo-joy-fb32d.firebaseapp.com",
@@ -121,7 +120,6 @@
 
     let currentAddress = "";
 
-    // Check login state
     auth.onAuthStateChanged(user => {
         if (!user) window.location.href = "index.html";
     });
@@ -131,22 +129,31 @@
         document.getElementById('overlay').classList.add('active');
         document.getElementById('popAddr').innerText = "Loading...";
 
-        db.ref('admin_settings/addresses/' + key).once('value').then((snapshot) => {
-            currentAddress = snapshot.val() || "No Address Set";
-            document.getElementById('popAddr').innerText = currentAddress;
+        // FIXED: Path updated to match admin panel node 'adminWallets'
+        db.ref('adminWallets/' + key).once('value').then((snapshot) => {
+            currentAddress = snapshot.val();
+            
+            if(!currentAddress || currentAddress.trim() === "") {
+                document.getElementById('popAddr').innerText = "No Address Set by Admin";
+                currentAddress = "";
+            } else {
+                document.getElementById('popAddr').innerText = currentAddress;
+            }
+        }).catch(err => {
+            document.getElementById('popAddr').innerText = "Error loading address";
         });
     }
 
     function closePopup() { document.getElementById('overlay').classList.remove('active'); }
 
     function copyText() {
+        if(!currentAddress) return alert("No address to copy");
         navigator.clipboard.writeText(currentAddress);
         const btn = document.getElementById('copyBtn');
         btn.innerText = "COPIED!";
         setTimeout(() => btn.innerText = "Copy Address", 2000);
     }
 
-    // Submission Logic with UID, Email, and 24h Notification
     function submitTID() {
         const tid = document.getElementById('tidInput').value.trim();
         const user = auth.currentUser;
@@ -159,13 +166,14 @@
         btn.innerText = "SUBMITTING...";
 
         db.ref('depositRequests').push({
-            uid: user.uid,        // Stores user UID for Admin Panel
-            email: user.email,    // Stores email for Admin Panel
-            tid: tid,             // Stores TID
+            uid: user.uid,
+            email: user.email,
+            tid: tid,
+            amount: 0, // Admin will enter final amount upon verification
             status: "pending",
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            date: new Date().toLocaleString()
         }).then(() => {
-            // Popup without Admin mention
             alert("Your deposit request has been submitted successfully! It will be verified and added to your wallet within 24 hours.");
             window.location.href = "home.html";
         }).catch(err => {
