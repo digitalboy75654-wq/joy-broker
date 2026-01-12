@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>joy Broker - Verified Version</title>
+    <title>Joy Broker - Verified Version</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
@@ -28,16 +28,6 @@
 
         h2 { font-size: 28px; font-weight: 800; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
 
-        .guide-bar {
-            background: #ffffff; color: #1e272e; padding: 20px; border-radius: 15px;
-            margin-bottom: 20px; display: none; text-align: center; border-bottom: 5px solid #2ecc71;
-            animation: slideDown 0.5s ease forwards;
-        }
-        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        .guide-bar h3 { color: #2ecc71; margin-bottom: 5px; font-weight: 800; }
-        .guide-bar p { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 15px; }
-
         .input-box { width: 100%; margin-bottom: 15px; position: relative; }
         input {
             width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.15);
@@ -53,6 +43,7 @@
             margin-top: 10px; transition: 0.3s;
         }
         .btn:active { transform: scale(0.95); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
 
         .error-text { color: #ff4d4d; font-size: 12px; margin-top: 5px; font-weight: 700; display: none; text-align: left; }
         .link { cursor: pointer; font-size: 13px; opacity: 0.9; margin-top: 15px; display: inline-block; font-weight: 600; text-decoration: underline; }
@@ -78,11 +69,6 @@
 
     <div id="signup-screen" class="glass-card">
         <h2>SIGN UP</h2>
-        <div id="signup-guide" class="guide-bar">
-            <h3>SUCCESS! 🎉</h3>
-            <p>Verification link sent! Please check your email (or spame folser) and verify to continue.</p>
-            <button class="btn" style="background: #e73c7e; color: white; font-size: 14px; padding: 10px;" onclick="showScreen('login-screen')">GO TO LOGIN</button>
-        </div>
         <div id="signup-fields">
             <div class="input-box"><input type="text" id="s-user" placeholder="Username"></div>
             <div class="input-box"><input type="email" id="s-email" placeholder="Email Address"></div>
@@ -97,11 +83,6 @@
 
     <div id="reset-screen" class="glass-card">
         <h2>RESET</h2>
-        <div id="reset-guide" class="guide-bar">
-            <h3>LINK SENT! 📧</h3>
-            <p>Password reset link has been sent. Check your email.</p>
-            <button class="btn" style="background: #e73c7e; color: white; font-size: 14px; padding: 10px;" onclick="showScreen('login-screen')">BACK TO LOGIN</button>
-        </div>
         <div id="reset-fields">
             <p style="font-size: 13px; margin-bottom: 15px;">Enter email to receive reset link.</p>
             <div class="input-box">
@@ -114,25 +95,11 @@
     </div>
 
     <script>
+        // Referral ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const refID = urlParams.get('ref') || "direct";
 
-		// 1. URL se Referral ID pakarna
-const urlParams = new URLSearchParams(window.location.search);
-const refID = urlParams.get('ref');
-
-// 2. Register function mein save karna
-function handleSignUp() {
-    // Aapka baki signup code...
-    
-    const userData = {
-        email: emailInput.value,
-        referredBy: refID || "direct", // Agar link se aaya to ID, warna "direct"
-        dailyProfit: 0,
-        balance: 0
-    };
-    
-    firebase.database().ref('users/' + userUID).set(userData);
-}
-        // --- Firebase Configuration ---
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
             authDomain: "ludo-joy-fb32d.firebaseapp.com",
@@ -152,16 +119,10 @@ function handleSignUp() {
             document.getElementById('signup-screen').style.display = 'none';
             document.getElementById('reset-screen').style.display = 'none';
             document.getElementById(id).style.display = 'block';
-
-            // Resetting UI elements
-            document.getElementById('signup-guide').style.display = 'none';
-            document.getElementById('signup-fields').style.display = 'block';
-            document.getElementById('reset-guide').style.display = 'none';
-            document.getElementById('reset-fields').style.display = 'block';
             document.querySelectorAll('.error-text').forEach(e => e.style.display = 'none');
         }
 
-        // --- SIGNUP LOGIC WITH POPUP FIX ---
+        // --- SIGNUP LOGIC (NO EMAIL VERIFICATION) ---
         function signup() {
             const email = document.getElementById('s-email').value;
             const pass = document.getElementById('s-pass').value;
@@ -176,55 +137,29 @@ function handleSignUp() {
             }
 
             btn.disabled = true;
-            btn.innerText = "PROCESSING...";
+            btn.innerText = "CREATING ACCOUNT...";
 
             auth.createUserWithEmailAndPassword(email, pass).then((res) => {
-                res.user.sendEmailVerification();
+                // Verification link hata di gayi hai
                 
-                // Saving to Realtime Database
+                // Saving data to Database
                 db.ref('users/' + res.user.uid).set({
                     username: user,
                     email: email,
+                    referredBy: refID,
                     wallet: 0,
                     totalDeposit: 0,
                     totalProfit: 0,
-                    totalLoss: 0,
                     isBlocked: false,
                     joinedAt: Date.now()
                 }).then(() => {
-                    // SHOW POPUP HERE
-                    document.getElementById('signup-fields').style.display = 'none';
-                    document.getElementById('signup-guide').style.display = 'block';
+                    // Registration ke foran baad home par bhej do
+                    window.location.href = "home.html";
                 });
 
             }).catch(e => {
                 btn.disabled = false;
                 btn.innerText = "CREATE ACCOUNT";
-                err.innerText = e.message;
-                err.style.display = "block";
-            });
-        }
-
-        // --- RESET LOGIC WITH POPUP FIX ---
-        function resetPassword() {
-            const email = document.getElementById('r-email').value;
-            const err = document.getElementById('r-err');
-            const btn = document.getElementById('reset-btn');
-
-            if(!email) {
-                err.innerText = "Please enter email!";
-                err.style.display = "block";
-                return;
-            }
-
-            btn.disabled = true;
-
-            auth.sendPasswordResetEmail(email).then(() => {
-                // SHOW POPUP HERE
-                document.getElementById('reset-fields').style.display = 'none';
-                document.getElementById('reset-guide').style.display = 'block';
-            }).catch(e => {
-                btn.disabled = false;
                 err.innerText = e.message;
                 err.style.display = "block";
             });
@@ -237,19 +172,34 @@ function handleSignUp() {
             const errDiv = document.getElementById('l-err');
 
             auth.signInWithEmailAndPassword(email, pass).then((res) => {
-                if(res.user.emailVerified) {
-                    window.location.href = "home.html";
-                } else {
-                    errDiv.innerText = "Please verify your email link first!";
-                    errDiv.style.display = 'block';
-                }
+                // Ab email verification check karne ki zaroorat nahi
+                window.location.href = "home.html";
             }).catch(e => {
                 errDiv.innerText = "Invalid Email or Password!";
                 errDiv.style.display = 'block';
             });
         }
+
+        // --- RESET LOGIC ---
+        function resetPassword() {
+            const email = document.getElementById('r-email').value;
+            const err = document.getElementById('r-err');
+            const btn = document.getElementById('reset-btn');
+
+            if(!email) {
+                err.innerText = "Please enter email!";
+                err.style.display = "block";
+                return;
+            }
+
+            auth.sendPasswordResetEmail(email).then(() => {
+                alert("Reset link sent to your email!");
+                showScreen('login-screen');
+            }).catch(e => {
+                err.innerText = e.message;
+                err.style.display = "block";
+            });
+        }
     </script>
 </body>
-
 </html>
-
