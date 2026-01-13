@@ -93,6 +93,12 @@
         <input type="text" id="tidInput" placeholder="Paste Transaction ID (TID) Here">
         <button class="btn-submit" id="submitBtn" onclick="submitTID()">SUBMIT FOR VERIFICATION</button>
     </div>
+    <div style="width: 100%; max-width: 450px; margin-top: 25px; padding: 15px; background: #111; border-radius: 20px; border: 1px solid #333;">
+        <h3 style="color: gold; text-align: center; font-size: 14px; margin-bottom: 15px;">📜 Deposit History</h3>
+        <div id="deposit-history-list">
+            <p style="text-align:center; color:#666; font-size:12px;">Loading history...</p>
+        </div>
+    </div>
 
     <div class="overlay" id="overlay">
         <div class="popup">
@@ -182,6 +188,58 @@
             btn.innerText = "SUBMIT FOR VERIFICATION";
         });
     }
+    // Auth change listener ke andar history call karein
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            fetchHistory(user.uid); // Yeh line add karein
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    function fetchHistory(uid) {
+        db.ref('depositRequests').on('value', (snapshot) => {
+            let historyArray = [];
+            snapshot.forEach(child => {
+                const data = child.val();
+                if (data.uid === uid) {
+                    historyArray.push(data);
+                }
+            });
+
+            // Sabse naya deposit upar dikhane ke liye sort
+            historyArray.sort((a, b) => b.timestamp - a.timestamp);
+
+            let html = "";
+            if (historyArray.length > 0) {
+                historyArray.forEach(data => {
+                    let color = data.status === "pending" ? "gold" : (data.status === "rejected" ? "#ff4d4d" : "#00e676");
+                    
+                    // Agar admin ne amount approve kar di hai toh finalAmount dikhayega, warna pending amount
+                    let displayAmt = data.finalAmount || data.amount || "0.00";
+
+                    html += `
+                    <div style="padding:12px; border-bottom:1px solid #222; margin-bottom:5px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <span style="font-weight:800; font-size:16px; color:#ffd700;">$${parseFloat(displayAmt).toFixed(2)}</span>
+                                <br><small style="color:#666; font-size:9px;">TID: ${data.tid}</small>
+                            </div>
+                            <span style="color:${color}; font-size:11px; font-weight:bold;">${data.status.toUpperCase()}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px; color:#888; font-size:10px;">
+                            <span>📅 ${data.date || new Date(data.timestamp).toLocaleString()}</span>
+                            <span style="color:#aaa;">DEPOSIT</span>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('deposit-history-list').innerHTML = html;
+            } else {
+                document.getElementById('deposit-history-list').innerHTML = "<p style='text-align:center; color:#666; font-size:12px;'>No deposit history found.</p>";
+            }
+        });
+    }
 </script>
 </body>
 </html>
+
