@@ -166,6 +166,14 @@ body{
     </p>
 </div>
 
+  <div style="margin: 20px; padding: 15px; background: #111; border-radius: 20px; border: 1px solid #333; box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);">
+    <h3 style="color: gold; text-align: center; font-size: 16px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">
+        🏆 Live Top Earners (Hourly)
+    </h3>
+    <div id="top-earners-list">
+        </div>
+</div>
+
 <div class="bottom-nav">
     <style>
     .support-container {
@@ -311,11 +319,66 @@ function openSupport() {
     // Ab ye seedha chat.html par le jayega jahan user message bhej sake
     window.location.href = "chat.html"; 
 }
+
+  // --- Is line ke niche paste karein (openSupport function ke baad) ---
+
+function generateTopEarners() {
+    const listContainer = document.getElementById('top-earners-list');
+    
+    // Names Pool (Inmein se har ghante random select honge)
+    const namesPool = [
+        "Zayan_Khan", "Crypto_Ali", "Sarah_99", "Ahmed_Trader", "Expert_Pro", 
+        "Lucky_Win", "Bilal_Joy", "Maria_Invest", "Usman_BTC", "Rizwan_786",
+        "Bullish_Boy", "Daily_Profit", "Noor_Fatima", "Hamza_King", "Sofia_Trade"
+    ];
+
+    const currentHour = new Date().getHours();
+    
+    // Randomly select 10 names
+    let hourlyNames = [...namesPool].sort(() => 0.5 - Math.random()).slice(0, 10);
+
+    let html = "";
+
+    hourlyNames.forEach((name, i) => {
+        // Unique Random ID (e.g. ID: 4X9BT2)
+        let randomID = Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        // Earning logic: Har ghante badalti hui values (0.00000 format)
+        let baseAmount = (100 + (Math.random() * 500) + (currentHour * 2)).toFixed(5);
+
+        html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 5px; border-bottom: 1px solid #222;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: gold; font-weight: bold; font-size: 11px;">#${i + 1}</span>
+                        <span style="color: #fff; font-size: 13px; font-weight: 600;">${name}</span>
+                    </div>
+                    <span style="color: #666; font-size: 10px; margin-left: 20px;">ID: ${randomID}</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: #25D366; font-weight: bold; font-family: monospace; font-size: 14px;">
+                        +$${baseAmount}
+                    </div>
+                    <div style="color: #444; font-size: 9px; text-transform: uppercase;">Earned Now</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    listContainer.innerHTML = html;
+}
+
+// Initial Call
+generateTopEarners();
+
+// Refresh every 1 hour
+setInterval(generateTopEarners, 3600000);
 </script>
 
 </body>
 
 </html>
+
 
 
 
