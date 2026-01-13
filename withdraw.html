@@ -18,6 +18,11 @@
         select, input { width: 100%; padding: 16px; border-radius: 15px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 18px; outline: none; }
         .btn-withdraw { width: 100%; padding: 18px; background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; border: none; border-radius: 18px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
         .history-section { width: 100%; max-width: 450px; margin-top: 20px; padding: 15px; background: #111; border-radius: 20px; border: 1px solid #333; }
+        .ins-container { width: 100%; max-width: 450px; background: rgba(255, 215, 0, 0.05); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 15px; padding: 15px; margin-bottom: 20px; }
+        .ins-header { color: #ffd700; font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .ins-list { list-style: none; padding: 0; margin: 0; font-size: 11px; color: #cccccc; line-height: 1.5; }
+        .ins-list li { margin-bottom: 8px; padding-left: 20px; position: relative; }
+        .ins-list li::before { content: "✔"; color: #ffd700; position: absolute; left: 0; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -26,63 +31,16 @@
         <a href="home.html" style="color:gold; text-decoration:none;">&#8592; BACK</a>
         <div class="balance-box">$<span id="userBalance">0.00</span></div>
     </div>
-    <style>
-    .ins-container {
-        width: 100%;
-        max-width: 450px;
-        background: rgba(255, 215, 0, 0.05);
-        border: 1px solid rgba(255, 215, 0, 0.2);
-        border-radius: 15px;
-        padding: 15px;
-        margin-bottom: 20px;
-        font-family: 'Poppins', sans-serif;
-    }
-    .ins-header {
-        color: #ffd700;
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        letter-spacing: 0.5px;
-    }
-    .ins-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .ins-list li {
-        font-size: 11px;
-        color: #cccccc;
-        line-height: 1.5;
-        margin-bottom: 8px;
-        padding-left: 20px;
-        position: relative;
-    }
-    .ins-list li::before {
-        content: "✔";
-        color: #ffd700;
-        position: absolute;
-        left: 0;
-        font-size: 12px;
-    }
-    .gold-text {
-        color: #ffd700;
-        font-weight: 600;
-    }
-</style>
 
-<div class="ins-container">
-    <div class="ins-header">
-        <span>📢</span> WITHDRAWAL INSTRUCTIONS
+    <div class="ins-container">
+        <div class="ins-header"><span>📢</span> WITHDRAWAL INSTRUCTIONS</div>
+        <ul class="ins-list">
+            <li>Minimum withdrawal amount is <span style="color:gold;">$10.00</span>.</li>
+            <li>A fixed network fee of <span style="color:gold;">$3.00</span> will be deducted.</li>
+            <li>Processing may take up to <span style="color:gold;">24 hours</span> for approval.</li>
+        </ul>
     </div>
-    <ul class="ins-list">
-        <li>Funds transferred to an incorrect address cannot be recovered.</li>
-        <li>Your balance will be <span class="gold-text">deducted immediately</span> upon request submission.</li>
-        <li>Processing may take up to <span class="gold-text">24 hours</span> for approval.</li>
-    </ul>
-</div>
+
     <div class="withdraw-card">
         <div style="background:#1a1a1a; padding:10px; border-radius:10px; margin-bottom:15px; font-size:11px;">
             <p>Account: <span id="displayEmail">Loading...</span></p>
@@ -91,15 +49,15 @@
         <select id="network">
             <option value="USDT (TRC20)">USDT (Tron - TRC20)</option>
             <option value="USDT (BEP20)">USDT (BSC - BEP20)</option>
+            <option value="USDT (POL)">USDT (Polygon - POL)</option>
             <option value="USDT (ERC20)">USDT (Ethereum - ERC20)</option>
-            <option value="USDT (Polygon)">USDT (Polygon - MATIC)</option>
         </select>
         <label>Address</label>
         <input type="text" id="address" placeholder="Wallet Address">
         <label>Amount ($)</label>
         <input type="number" id="amount" placeholder="Min 10.00" oninput="calculateNet()">
         <div style="margin-bottom:20px; font-size:13px;">Receive After Fee ($3): <span id="netAmount" style="color:gold;">$0.00</span></div>
-        <button class="btn-withdraw" onclick="submitWithdraw()">Submit Withdrawal</button>
+        <button class="btn-withdraw" id="subBtn" onclick="submitWithdraw()">Submit Withdrawal</button>
     </div>
 
     <div class="history-section">
@@ -120,12 +78,16 @@
     const auth = firebase.auth();
 
     let currentBalance = 0;
+    let userName = "Member";
 
     auth.onAuthStateChanged(user => {
         if (user) {
             document.getElementById('displayEmail').innerText = user.email;
-            db.ref('users/' + user.uid + '/wallet').on('value', (s) => {
-                currentBalance = parseFloat(s.val()) || 0;
+            // Fetch User Details (Name and Balance)
+            db.ref('users/' + user.uid).on('value', (s) => {
+                const data = s.val() || {};
+                currentBalance = parseFloat(data.wallet) || 0;
+                userName = data.name || "User";
                 document.getElementById('userBalance').innerText = currentBalance.toFixed(2);
             });
             fetchHistory(user.uid);
@@ -140,60 +102,78 @@
     function submitWithdraw() {
         const user = auth.currentUser;
         const addr = document.getElementById('address').value.trim();
-        const amt = parseFloat(document.getElementById('amount').value);
-        if (!addr || amt < 10 || amt > currentBalance) return alert("Check address or balance!");
+        const amtValue = document.getElementById('amount').value;
+        const amt = parseFloat(amtValue);
+        const netw = document.getElementById('network').value;
+        const receiveAmt = (amt - 3).toFixed(2);
 
+        if (!addr || !amtValue || amt < 10 || amt > currentBalance) {
+            return alert("Check address, minimum $10 or balance!");
+        }
+
+        document.getElementById('subBtn').disabled = true;
         const requestRef = db.ref('withdrawRequests').push();
+        
         requestRef.set({
             uid: user.uid,
+            name: userName,
             email: user.email,
             walletAddress: addr,
+            walletName: netw,
+            network: netw,
             requestedAmount: amt,
+            receiveAmount: receiveAmt,
             status: "pending",
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            date: new Date().toLocaleString()
         }).then(() => {
-            db.ref('users/' + user.uid).update({ wallet: currentBalance - amt });
-            alert("Submitted!");
+            db.ref('users/' + user.uid).update({ wallet: (currentBalance - amt).toFixed(2) });
+            alert("Submitted Successfully!");
+            document.getElementById('amount').value = "";
+            document.getElementById('address').value = "";
+            document.getElementById('subBtn').disabled = false;
+        }).catch(e => {
+            alert("Error: " + e.message);
+            document.getElementById('subBtn').disabled = false;
         });
     }
 
-   function fetchHistory(uid) {
+    function fetchHistory(uid) {
         db.ref('withdrawRequests').on('value', (snapshot) => {
-            let html = ""; 
-            let found = false;
-            
+            let historyArray = [];
             snapshot.forEach(child => {
                 const data = child.val();
                 if (data.uid === uid) {
-                    found = true;
-                    
-                    // Date aur Time ko format karne ka tareeka
-                    const dateObj = new Date(data.timestamp);
-                    const dateStr = dateObj.toLocaleDateString(); // Example: 13/01/2026
-                    const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Example: 10:45 PM
+                    historyArray.push(data);
+                }
+            });
 
-                    let color = data.status === "pending" ? "gold" : (data.status === "rejected" ? "red" : "green");
+            // Sort: Newest First (Timestamp ke hisab se)
+            historyArray.sort((a, b) => b.timestamp - a.timestamp);
+
+            let html = "";
+            if (historyArray.length > 0) {
+                historyArray.forEach(data => {
+                    let color = data.status === "pending" ? "gold" : (data.status === "rejected" ? "#ff4d4d" : "#00e676");
                     
-                    // Design mein Date aur Time shamil hai
                     html += `
                     <div style="padding:12px; border-bottom:1px solid #222; margin-bottom:5px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span style="font-weight:bold; font-size:15px; color:#fff;">$${parseFloat(data.requestedAmount).toFixed(2)}</span>
-                            <span style="color:${color}; font-size:12px; font-weight:bold;">${data.status.toUpperCase()}</span>
+                            <span style="color:${color}; font-size:11px; font-weight:bold;">${data.status.toUpperCase()}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-top:5px; color:#888; font-size:10px;">
-                            <span>📅 ${dateStr}</span>
-                            <span>⏰ ${timeStr}</span>
+                            <span>📅 ${data.date || new Date(data.timestamp).toLocaleString()}</span>
+                            <span>${data.walletName || 'USDT'}</span>
                         </div>
                     </div>`;
-                }
-            });
-            document.getElementById('withdrawal-history-list').innerHTML = found ? html : "<p style='text-align:center; color:#666; font-size:12px;'>No history found.</p>";
+                });
+                document.getElementById('withdrawal-history-list').innerHTML = html;
+            } else {
+                document.getElementById('withdrawal-history-list').innerHTML = "<p style='text-align:center; color:#666; font-size:12px;'>No history found.</p>";
+            }
         });
     }
 </script>
 </body>
 </html>
-
-
-
