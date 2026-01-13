@@ -27,12 +27,12 @@
         <div class="balance-box">$<span id="userBalance">0.00</span></div>
     </div>
     <style>
-    .instructions-box {
+    .ins-container {
         width: 100%;
         max-width: 450px;
-        background: rgba(255, 215, 0, 0.05); /* Light Gold Tint */
+        background: rgba(255, 215, 0, 0.05);
         border: 1px solid rgba(255, 215, 0, 0.2);
-        border-radius: 20px;
+        border-radius: 15px;
         padding: 15px;
         margin-bottom: 20px;
         font-family: 'Poppins', sans-serif;
@@ -40,12 +40,12 @@
     .ins-header {
         color: #ffd700;
         font-size: 14px;
-        font-weight: 800;
+        font-weight: 700;
         margin-bottom: 10px;
         display: flex;
         align-items: center;
         gap: 8px;
-        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     .ins-list {
         list-style: none;
@@ -54,49 +54,49 @@
     }
     .ins-list li {
         font-size: 11px;
-        color: #bbb;
-        line-height: 1.6;
-        margin-bottom: 6px;
-        padding-left: 18px;
+        color: #cccccc;
+        line-height: 1.5;
+        margin-bottom: 8px;
+        padding-left: 20px;
         position: relative;
     }
     .ins-list li::before {
-        content: "•";
+        content: "✔";
         color: #ffd700;
         position: absolute;
         left: 0;
-        font-weight: bold;
-        font-size: 16px;
-        top: -2px;
+        font-size: 12px;
     }
-    .ins-highlight {
+    .gold-text {
         color: #ffd700;
         font-weight: 600;
     }
 </style>
 
-<div class="instructions-box">
+<div class="ins-container">
     <div class="ins-header">
-        <span>⚠️</span> Hidayat (Instructions)
+        <span>📢</span> WITHDRAWAL INSTRUCTIONS
     </div>
     <ul class="ins-list">
-        <li>Kam az kam withdrawal amount <span class="ins-highlight">$10.00</span> hai.</li>
-        <li>Har withdrawal par <span class="ins-highlight">$3.00 network fee</span> lazmi katay gi.</li>
-        <li>Sirf <span class="ins-highlight">USDT (TRC20/BEP20)</span> wallet address hi istemal karein.</li>
-        <li>Galat address dene ki surat mein company zimadar nahi hogi.</li>
-        <li>Withdrawal request submit karte hi balance <span class="ins-highlight">fauran minus</span> ho jayega.</li>
+        <li>Minimum withdrawal amount is <span class="gold-text">$10.00</span>.</li>
+        <li>A fixed network fee of <span class="gold-text">$3.00</span> will be deducted per transaction.</li>
+        <li>Ensure you provide a valid <span class="gold-text">USDT (TRC20/BEP20)</span> address only.</li>
+        <li>Funds transferred to an incorrect address cannot be recovered.</li>
+        <li>Your balance will be <span class="gold-text">deducted immediately</span> upon request submission.</li>
+        <li>Processing may take up to <span class="gold-text">24 hours</span> for approval.</li>
     </ul>
 </div>
-
     <div class="withdraw-card">
         <div style="background:#1a1a1a; padding:10px; border-radius:10px; margin-bottom:15px; font-size:11px;">
             <p>Account: <span id="displayEmail">Loading...</span></p>
         </div>
         <label>Network</label>
-        <select id="network"><option value="USDT (TRC20)">USDT (Tron - TRC20)</option></select>
-        <select id="network"><option value="USDT (BEP20)">USDT (BSC - BEP20)</option></select>
-        <select id="network"><option value="USDT (ERC20)">USDT (Ethereum - ERC20)</option></select>
-        <select id="network"><option value="USDT (Polygon)">USDT (Polygon - MATIC)</option></select>
+        <select id="network">
+            <option value="USDT (TRC20)">USDT (Tron - TRC20)</option>
+            <option value="USDT (BEP20)">USDT (BSC - BEP20)</option>
+            <option value="USDT (ERC20)">USDT (Ethereum - ERC20)</option>
+            <option value="USDT (Polygon)">USDT (Polygon - MATIC)</option>
+        </select>
         <label>Address</label>
         <input type="text" id="address" placeholder="Wallet Address">
         <label>Amount ($)</label>
@@ -180,3 +180,4 @@
 </script>
 </body>
 </html>
+
