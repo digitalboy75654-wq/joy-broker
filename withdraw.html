@@ -139,41 +139,46 @@
     }
 
     function fetchHistory(uid) {
-        db.ref('withdrawRequests').on('value', (snapshot) => {
-            let historyArray = [];
-            snapshot.forEach(child => {
-                const data = child.val();
-                if (data.uid === uid) {
-                    historyArray.push(data);
-                }
-            });
-
-            // Sort: Newest First (Timestamp ke hisab se)
-            historyArray.sort((a, b) => b.timestamp - a.timestamp);
-
-            let html = "";
-            if (historyArray.length > 0) {
-                historyArray.forEach(data => {
-                    let color = data.status === "pending" ? "gold" : (data.status === "rejected" ? "#ff4d4d" : "#00e676");
-                    
-                    html += `
-                    <div style="padding:12px; border-bottom:1px solid #222; margin-bottom:5px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:bold; font-size:15px; color:#fff;">$${parseFloat(data.requestedAmount).toFixed(2)}</span>
-                            <span style="color:${color}; font-size:11px; font-weight:bold;">${data.status.toUpperCase()}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-top:5px; color:#888; font-size:10px;">
-                            <span>📅 ${data.date || new Date(data.timestamp).toLocaleString()}</span>
-                            <span>${data.walletName || 'USDT'}</span>
-                        </div>
-                    </div>`;
-                });
-                document.getElementById('withdrawal-history-list').innerHTML = html;
-            } else {
-                document.getElementById('withdrawal-history-list').innerHTML = "<p style='text-align:center; color:#666; font-size:12px;'>No history found.</p>";
-            }
+    db.ref('withdrawRequests').on('value', (snapshot) => {
+        let historyArray = [];
+        snapshot.forEach(child => {
+            const data = child.val();
+            if (data.uid === uid) { historyArray.push(data); }
         });
-    }
+
+        // Nayi history upar laane ke liye sort
+        historyArray.sort((a, b) => b.timestamp - a.timestamp);
+
+        let html = "";
+        if (historyArray.length > 0) {
+            historyArray.forEach(data => {
+                let color = data.status === "pending" ? "gold" : (data.status === "rejected" ? "#ff4d4d" : "#00e676");
+                
+                // Fees cut hone ke baad wali raqam ($3 deduct)
+                let displayAmt = data.receiveAmount || (parseFloat(data.requestedAmount) - 3).toFixed(2);
+
+                html += `
+                <div style="padding:12px; border-bottom:1px solid #222; margin-bottom:5px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="font-weight:800; font-size:16px; color:var(--gold);">$${displayAmt}</span>
+                            <br><small style="color:#666; font-size:9px;">Requested: $${parseFloat(data.requestedAmount).toFixed(2)} (-$3 Fee)</small>
+                        </div>
+                        <span style="color:${color}; font-size:11px; font-weight:bold;">${data.status.toUpperCase()}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:8px; color:#888; font-size:10px;">
+                        <span>📅 ${data.date || new Date(data.timestamp).toLocaleString()}</span>
+                        <span>${data.walletName || 'USDT'}</span>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('withdrawal-history-list').innerHTML = html;
+        } else {
+            document.getElementById('withdrawal-history-list').innerHTML = "<p style='text-align:center; color:#666; font-size:12px;'>No history found.</p>";
+        }
+    });
+}
 </script>
 </body>
 </html>
+
