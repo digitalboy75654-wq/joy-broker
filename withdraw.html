@@ -26,13 +26,77 @@
         <a href="home.html" style="color:gold; text-decoration:none;">&#8592; BACK</a>
         <div class="balance-box">$<span id="userBalance">0.00</span></div>
     </div>
+    <style>
+    .instructions-box {
+        width: 100%;
+        max-width: 450px;
+        background: rgba(255, 215, 0, 0.05); /* Light Gold Tint */
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        border-radius: 20px;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-family: 'Poppins', sans-serif;
+    }
+    .ins-header {
+        color: #ffd700;
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-transform: uppercase;
+    }
+    .ins-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .ins-list li {
+        font-size: 11px;
+        color: #bbb;
+        line-height: 1.6;
+        margin-bottom: 6px;
+        padding-left: 18px;
+        position: relative;
+    }
+    .ins-list li::before {
+        content: "•";
+        color: #ffd700;
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+        font-size: 16px;
+        top: -2px;
+    }
+    .ins-highlight {
+        color: #ffd700;
+        font-weight: 600;
+    }
+</style>
+
+<div class="instructions-box">
+    <div class="ins-header">
+        <span>⚠️</span> Hidayat (Instructions)
+    </div>
+    <ul class="ins-list">
+        <li>Kam az kam withdrawal amount <span class="ins-highlight">$10.00</span> hai.</li>
+        <li>Har withdrawal par <span class="ins-highlight">$3.00 network fee</span> lazmi katay gi.</li>
+        <li>Sirf <span class="ins-highlight">USDT (TRC20/BEP20)</span> wallet address hi istemal karein.</li>
+        <li>Galat address dene ki surat mein company zimadar nahi hogi.</li>
+        <li>Withdrawal request submit karte hi balance <span class="ins-highlight">fauran minus</span> ho jayega.</li>
+    </ul>
+</div>
 
     <div class="withdraw-card">
         <div style="background:#1a1a1a; padding:10px; border-radius:10px; margin-bottom:15px; font-size:11px;">
             <p>Account: <span id="displayEmail">Loading...</span></p>
         </div>
         <label>Network</label>
-        <select id="network"><option value="USDT (TRC20)">USDT (TRC20)</option></select>
+        <select id="network"><option value="USDT (TRC20)">USDT (Tron - TRC20)</option></select>
+        <select id="network"><option value="USDT (BEP20)">USDT (BSC - BEP20)</option></select>
+        <select id="network"><option value="USDT (ERC20)">USDT (Ethereum - ERC20)</option></select>
+        <select id="network"><option value="USDT (Polygon)">USDT (Polygon - MATIC)</option></select>
         <label>Address</label>
         <input type="text" id="address" placeholder="Wallet Address">
         <label>Amount ($)</label>
