@@ -87,6 +87,15 @@
         <button class="btn-withdraw" onclick="submitWithdraw()">Submit Withdrawal</button>
     </div>
 
+    <div style="margin: 20px; padding: 15px; background: #111; border-radius: 20px; border: 1px solid #333;">
+    <h3 style="color: gold; text-align: center; font-size: 16px; margin-bottom: 15px; text-transform: uppercase;">
+        📜 Your Withdrawal History
+    </h3>
+    <div id="withdrawal-history-list">
+        <p style="text-align:center; color:#666; font-size:12px;">Loading history...</p>
+    </div>
+</div>
+
     <div class="info-note">
         Processing may take up to 24 hours. Ensure the address and network match. Sending USDT to the wrong network will result in permanent loss of funds.
     </div>
@@ -182,7 +191,45 @@
             });
         }
     }
+    auth.onAuthStateChanged(user => {
+    if (user) {
+        const historyContainer = document.getElementById('withdrawal-history-list');
+
+        // User ki apni withdrawals fetch karna
+        db.ref('withdrawals').orderByChild('uid').equalTo(user.uid).on('value', (snapshot) => {
+            let html = "";
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    
+                    // Status ke mutabiq color set karna
+                    let statusColor = "#f0b90b"; // Pending (Gold)
+                    if (data.status === "Approved") statusColor = "#25D366"; // Green
+                    if (data.status === "Rejected") statusColor = "#ff4d4d"; // Red
+
+                    html += `
+                        <div style="background:#1a1e23; padding:12px; border-radius:12px; margin-bottom:10px; border-left: 4px solid ${statusColor};">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="color:#fff; font-weight:bold;">$${parseFloat(data.amount).toFixed(2)}</span>
+                                <span style="color:${statusColor}; font-size:11px; font-weight:bold; text-transform:uppercase;">${data.status || 'Pending'}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-top:5px; font-size:10px; color:#848e9c;">
+                                <span>${data.method} (${data.address.substring(0,10)}...)</span>
+                                <span>${data.date || ''}</span>
+                            </div>
+                            ${data.reason ? `<div style="color:#ff4d4d; font-size:10px; margin-top:5px; padding-top:5px; border-top:1px solid #333;">Reason: ${data.reason}</div>` : ''}
+                        </div>
+                    `;
+                });
+                historyContainer.innerHTML = html;
+            } else {
+                historyContainer.innerHTML = `<p style="text-align:center; color:#666; font-size:12px;">No history found.</p>`;
+            }
+        });
+    }
+});
 </script>
 
 </body>
+
 </html>
