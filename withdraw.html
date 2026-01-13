@@ -160,24 +160,42 @@
         });
     }
 
-    function fetchHistory(uid) {
+   function fetchHistory(uid) {
         db.ref('withdrawRequests').on('value', (snapshot) => {
-            let html = ""; let found = false;
+            let html = ""; 
+            let found = false;
+            
             snapshot.forEach(child => {
                 const data = child.val();
                 if (data.uid === uid) {
                     found = true;
+                    
+                    // Date aur Time ko format karne ka tareeka
+                    const dateObj = new Date(data.timestamp);
+                    const dateStr = dateObj.toLocaleDateString(); // Example: 13/01/2026
+                    const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Example: 10:45 PM
+
                     let color = data.status === "pending" ? "gold" : (data.status === "rejected" ? "red" : "green");
-                    html += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-                        <span>$${data.requestedAmount}</span>
-                        <span style="color:${color}">${data.status.toUpperCase()}</span>
+                    
+                    // Design mein Date aur Time shamil hai
+                    html += `
+                    <div style="padding:12px; border-bottom:1px solid #222; margin-bottom:5px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:bold; font-size:15px; color:#fff;">$${parseFloat(data.requestedAmount).toFixed(2)}</span>
+                            <span style="color:${color}; font-size:12px; font-weight:bold;">${data.status.toUpperCase()}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:5px; color:#888; font-size:10px;">
+                            <span>📅 ${dateStr}</span>
+                            <span>⏰ ${timeStr}</span>
+                        </div>
                     </div>`;
                 }
             });
-            document.getElementById('withdrawal-history-list').innerHTML = found ? html : "No history found.";
+            document.getElementById('withdrawal-history-list').innerHTML = found ? html : "<p style='text-align:center; color:#666; font-size:12px;'>No history found.</p>";
         });
     }
 </script>
 </body>
 </html>
+
 
