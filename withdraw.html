@@ -41,6 +41,9 @@
         .btn-withdraw:active { transform: scale(0.98); }
 
         .info-note { width: 100%; max-width: 450px; margin-top: 20px; font-size: 11px; color: #666; text-align: center; line-height: 1.6; }
+        
+        .history-section { width: 100%; max-width: 450px; margin: 20px; padding: 15px; background: #111; border-radius: 20px; border: 1px solid #333; }
+        .history-title { color: gold; text-align: center; font-size: 14px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -87,51 +90,53 @@
         <button class="btn-withdraw" onclick="submitWithdraw()">Submit Withdrawal</button>
     </div>
 
-    
-
     <div class="info-note">
-        Processing may take up to 24 hours. Ensure the address and network match. Sending USDT to the wrong network will result in permanent loss of funds.
+        Processing may take up to 24 hours. Ensure the address and network match.
     </div>
 
-    <div style="margin: 20px; padding: 15px; background: #111; border-radius: 20px; border: 1px solid #333;">
-    <h3 style="color: gold; text-align: center; font-size: 16px; margin-bottom: 15px; text-transform: uppercase;">
-        📜 Your Withdrawal History
-    </h3>
-    <div id="withdrawal-history-list">
-        <p style="text-align:center; color:#666; font-size:12px;">Loading history...</p>
+    <div class="history-section">
+        <h3 class="history-title">📜 Withdrawal History</h3>
+        <div id="withdrawal-history-list">
+            <p style="text-align:center; color:#666; font-size:12px;">Loading history...</p>
+        </div>
     </div>
-</div>
 
 <script>
-    // Firebase Configuration
+    // 1. Firebase Config & Init
     const firebaseConfig = {
         apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
         databaseURL: "https://ludo-joy-fb32d-default-rtdb.firebaseio.com",
         projectId: "ludo-joy-fb32d",
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.database();
     const auth = firebase.auth();
 
     let currentBalance = 0;
     const fee = 3.00;
 
-    // Check Auth and Sync Balance
+    // 2. Auth State & Data Sync
     auth.onAuthStateChanged(user => {
         if (user) {
             document.getElementById('displayEmail').innerText = user.email;
             document.getElementById('displayUID').innerText = user.uid.substring(0, 10).toUpperCase();
 
-            // Real-time Balance fetch (Same as Home Page)
+            // Sync Balance
             db.ref('users/' + user.uid + '/wallet').on('value', (snapshot) => {
                 currentBalance = parseFloat(snapshot.val()) || 0;
                 document.getElementById('userBalance').innerText = currentBalance.toFixed(2);
             });
+
+            // Fetch History
+            fetchHistory(user.uid);
         } else {
             window.location.href = "index.html";
         }
     });
 
+    // 3. Functions
     function calculateNet() {
         let amt = parseFloat(document.getElementById('amount').value) || 0;
         let net = amt > fee ? amt - fee : 0;
@@ -145,21 +150,11 @@
         const amountValue = parseFloat(document.getElementById('amount').value);
         const receiveAmount = amountValue - fee;
 
-        // Validations
-        if (!addressValue || addressValue.length < 20) {
-            return alert("Please enter a valid and complete wallet address!");
-        }
-        if (isNaN(amountValue) || amountValue < 10) {
-            return alert("Minimum withdrawal amount is $10!");
-        }
-        if (amountValue > currentBalance) {
-            return alert("Insufficient balance in your wallet!");
-        }
+        if (!addressValue || addressValue.length < 20) return alert("Valid address required!");
+        if (isNaN(amountValue) || amountValue < 10) return alert("Min withdrawal is $10!");
+        if (amountValue > currentBalance) return alert("Insufficient balance!");
 
-        // Final Confirmation
-        const confirmMsg = `Confirm Withdrawal:\n\nNetwork: ${networkValue}\nAddress: ${addressValue}\nTotal Amount: $${amountValue}\nReceive After Fee: $${receiveAmount.toFixed(2)}\n\nProceed?`;
-        
-        if (confirm(confirmMsg)) {
+        if (confirm(`Confirm Withdrawal:\nNetwork: ${networkValue}\nAmount: $${amountValue}\nReceive: $${receiveAmount.toFixed(2)}`)) {
             const requestRef = db.ref('withdrawRequests');
             const newRequest = requestRef.push();
 
@@ -167,8 +162,8 @@
                 requestId: newRequest.key,
                 uid: user.uid,
                 email: user.email,
-                walletAddress: addressValue, // Admin ko pura address yahan milega
-                network: networkValue,       // Pura network name admin ko jayega
+                walletAddress: addressValue,
+                network: networkValue,
                 requestedAmount: amountValue,
                 fee: fee,
                 receiveAmount: receiveAmount,
@@ -176,42 +171,22 @@
                 timestamp: Date.now()
             };
 
-            // 1. Submit to Admin Node
             newRequest.set(withdrawData)
             .then(() => {
-                // 2. Deduct from User's real wallet balance
-                return db.ref('users/' + user.uid).update({
-                    wallet: currentBalance - amountValue
-                });
+                return db.ref('users/' + user.uid).update({ wallet: currentBalance - amountValue });
             })
             .then(() => {
-                alert("Withdrawal request submitted successfully! Your funds are under review.");
-                window.location.href = "home.html";
+                alert("Request submitted successfully!");
+                document.getElementById('amount').value = "";
+                document.getElementById('address').value = "";
             })
-            .catch((error) => {
-                alert("Error: " + error.message);
-            });
+            .catch(err => alert("Error: " + err.message));
         }
     }
-   <script>
-  // 1. Firebase Initialize (Pehle se maujood hai)
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
 
-  // 2. Withdrawal Submit Function (Pehle se maujood hai)
-  function submitWithdraw() { 
-     /* ... aapka purana code ... */ 
-  }
-
-  // 3. YAHAN PASTE KAREIN (History Wala Code)
- // --- History Section (Purane history code ko isse replace karein) ---
-auth.onAuthStateChanged(user => {
-    if (user) {
+    function fetchHistory(myUID) {
         const historyList = document.getElementById('withdrawal-history-list');
-        const myUID = user.uid;
-
-        // Aapka submit code 'withdrawRequests' mein data save karta hai, isliye yahan bhi wahi path rakha hai
+        
         db.ref('withdrawRequests').on('value', (snapshot) => {
             let html = "";
             let found = false;
@@ -219,21 +194,14 @@ auth.onAuthStateChanged(user => {
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const data = child.val();
-                    
-                    // Manual filter: Sirf login user ka data dikhao
                     if (data.uid === myUID) {
                         found = true;
-                        
-                        // Status aur Color handle karna
                         let rawStatus = data.status ? data.status.toLowerCase() : "pending";
                         let statusText = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
                         
-                        let statusColor = "#f0b90b"; // Pending (Gold)
-                        if (rawStatus === "completed" || rawStatus === "approved" || rawStatus === "success") {
-                            statusColor = "#25D366"; // Green
-                        } else if (rawStatus === "rejected") {
-                            statusColor = "#ff4d4d"; // Red
-                        }
+                        let statusColor = "#f0b90b"; // Gold for pending
+                        if (rawStatus === "completed" || rawStatus === "approved" || rawStatus === "success") statusColor = "#25D366";
+                        if (rawStatus === "rejected") statusColor = "#ff4d4d";
 
                         html += `
                             <div style="background:#1a1e23; padding:12px; border-radius:12px; margin-bottom:10px; border-left: 4px solid ${statusColor};">
@@ -244,25 +212,13 @@ auth.onAuthStateChanged(user => {
                                 <div style="color:#888; font-size:10px; margin-top:5px;">
                                     ID: ${child.key.substring(0,8)}... | ${data.timestamp ? new Date(data.timestamp).toLocaleDateString() : 'Recent'}
                                 </div>
-                                ${data.reason ? `<div style="color:#ff4d4d; font-size:10px; margin-top:5px; border-top:1px solid #333; padding-top:5px;">Note: ${data.reason}</div>` : ''}
                             </div>`;
                     }
                 });
             }
-
-            if (found) {
-                historyList.innerHTML = html;
-            } else {
-                historyList.innerHTML = `<p style="text-align:center; color:#666; font-size:12px;">No withdrawal history found.</p>`;
-            }
+            historyList.innerHTML = found ? html : `<p style="text-align:center; color:#666; font-size:12px;">No withdrawal history found.</p>`;
         });
     }
-});
 </script>
 </body>
-
 </html>
-
-
-
-
