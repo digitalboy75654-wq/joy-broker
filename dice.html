@@ -2,100 +2,113 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dice Roll Game | Golden Games</title>
+<title>Market Node Forecast | Joy Broker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
-    /* basic styles */
-    *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins}
-    body{background:radial-gradient(circle,#111,#000);min-height:100vh;display:flex;justify-content:center;align-items:center;color:#fff;}
-    .card{width:360px;background:#050505;border-radius:22px;padding:20px;box-shadow:0 0 40px rgba(255,215,0,.3);border: 1px solid #222;}
-    .header{display:flex;justify-content:space-between;margin-bottom:15px;align-items: center;}
-    .wallet{background:#111;padding:6px 14px;border-radius:20px;color:gold;border: 1px solid gold;font-weight: 600;}
-    .back-btn { text-decoration: none; color: gold; font-size: 13px; font-weight: bold; }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins', sans-serif;}
+    body{background:radial-gradient(circle,#1a1a1a,#000);min-height:100vh;display:flex;justify-content:center;align-items:center;color:#fff;overflow-x:hidden;}
+
+    .card{width:360px;background:#050505;border-radius:25px;padding:25px;box-shadow:0 0 50px rgba(255,215,0,0.15);border: 1px solid #222;position:relative; margin-top: 20px; margin-bottom: 20px;}
     
-    /* Dice animation */
-    .dice-box{text-align:center;margin:20px 0}
-    .dice{font-size:90px; transition: transform 0.2s;}
+    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+    .back-btn { text-decoration: none; color: gold; font-size: 12px; font-weight: bold; border: 1px solid rgba(255,215,0,0.3); padding: 5px 12px; border-radius: 8px; }
+    .wallet{background:rgba(255,215,0,0.05);padding:8px 15px;border-radius:12px;color:gold;border: 1px solid gold;font-weight: 800; font-size: 14px;}
+
+    /* Node Display */
+    .dice-box{text-align:center;margin:30px 0; position: relative;}
+    .dice{font-size:80px; transition: transform 0.2s; filter: drop-shadow(0 0 15px gold);}
+    .node-label{font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-top: 10px;}
+
     @keyframes roll{
-        0%{transform:rotate(0deg)}
-        100%{transform:rotate(360deg)}
+        0%{transform:rotate(0deg) scale(1)}
+        50%{transform:rotate(180deg) scale(1.2)}
+        100%{transform:rotate(360deg) scale(1)}
     }
 
-    /* Number grid */
-    .numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:15px 0;}
-    .num{background:#111;padding:15px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid #222;font-weight: bold;}
-    .num.active{border-color:gold;background:rgba(255, 215, 0, 0.1);color: gold;}
+    /* Grid System */
+    .numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;}
+    .num{background:#111;padding:15px;border-radius:12px;text-align:center;cursor:pointer;border:1px solid #222;font-weight: 800; color: #666; transition: 0.3s;}
+    .num.active{border-color:gold; background:rgba(255, 215, 0, 0.1); color: gold; box-shadow: 0 0 15px rgba(255,215,0,0.2);}
 
-    /* Inputs & Buttons */
-    input,button{width:100%;margin-top:12px;padding:14px;border:none;border-radius:14px;outline: none;}
-    input{background:#111;color:#fff; border: 1px solid #333; text-align: center;}
-    button{background:linear-gradient(135deg,#ffd700,#b8860b);font-weight:700;cursor:pointer;}
+    /* Controls */
+    .input-label{font-size: 10px; color: #444; margin-bottom: 5px; text-align: left;}
+    input{width:100%; background:#111; color:gold; border: 1px solid #333; padding:15px; border-radius:12px; text-align: center; font-size: 18px; font-weight: 800; outline: none; margin-bottom: 15px;}
+    .btn-exec{width:100%; padding:18px; border:none; border-radius:15px; background:linear-gradient(135deg,#ffd700,#b8860b); color:#000; font-weight:800; font-size: 16px; cursor:pointer; text-transform: uppercase; letter-spacing: 1px;}
     
-    /* Popups */
-    .popup{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;justify-content:center;align-items:center;z-index:99;}
-    .popup-box{background:#111;padding:30px;border-radius:25px;text-align:center;width:300px;border: 1px solid gold;}
+    /* Instructions Section */
+    .guidelines { margin-top: 25px; padding: 15px; background: rgba(255,215,0,0.03); border-radius: 12px; border: 1px dashed #333; }
+    .guidelines h4 { font-size: 12px; color: gold; margin-bottom: 8px; text-transform: uppercase; }
+    .guidelines li { font-size: 10.5px; color: #888; margin-bottom: 5px; list-style: none; line-height: 1.4; }
+
+    /* Result Popup */
+    .popup{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;justify-content:center;align-items:center;z-index:999; backdrop-filter: blur(10px);}
+    .popup-box{background:#0a0a0a;padding:40px 30px;border-radius:30px;text-align:center;width:320px;border: 1px solid gold; box-shadow: 0 0 50px rgba(255,215,0,0.2);}
+    .res-title{font-size: 24px; font-weight: 800; margin-bottom: 10px;}
+    .res-text{color: #888; margin-bottom: 25px;}
+    .btn-collect{width:100%; padding:15px; background:gold; border:none; border-radius:12px; font-weight:800; cursor:pointer;}
 </style>
 </head>
 <body>
 
+<audio id="rollSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
+<audio id="winSound" src="https://www.myinstants.com/media/sounds/win_nS6X7v9.mp3" preload="auto"></audio>
+<audio id="lossSound" src="https://www.myinstants.com/media/sounds/wrong-answer-126515.mp3" preload="auto"></audio>
+
 <div class="card">
-  <div class="header">
-    <a href="home.html" class="back-btn"><span>&#8592;</span> BACK</a>
-    <div class="wallet">$<span id="walletSpan">0.00</span></div>
-  </div>
+    <div class="header">
+        <a href="home.html" class="back-btn">← TERMINAL</a>
+        <div class="wallet">EQUITY: $<span id="walletSpan">0.00</span></div>
+    </div>
 
-  <div class="dice-box">
-    <div id="dice" class="dice">🎲</div>
-  </div>
+    <div class="dice-box">
+        <div id="dice" class="dice">⚀</div>
+        <div class="node-label">Market Node Analyzer</div>
+    </div>
 
-  <div class="numbers">
-    <div class="num" onclick="selectNum(1)">1</div>
-    <div class="num" onclick="selectNum(2)">2</div>
-    <div class="num" onclick="selectNum(3)">3</div>
-    <div class="num" onclick="selectNum(4)">4</div>
-    <div class="num" onclick="selectNum(5)">5</div>
-    <div class="num" onclick="selectNum(6)">6</div>
-  </div>
+    <div class="numbers">
+        <div class="num" onclick="selectNum(1)">N-1</div>
+        <div class="num" onclick="selectNum(2)">N-2</div>
+        <div class="num" onclick="selectNum(3)">N-3</div>
+        <div class="num" onclick="selectNum(4)">N-4</div>
+        <div class="num" onclick="selectNum(5)">N-5</div>
+        <div class="num" onclick="selectNum(6)">N-6</div>
+    </div>
 
-  <input type="number" id="betInput" placeholder="Enter Bet Amount">
-  <button id="rollBtn" onclick="startRoll()">ROLL DICE</button>
-  
-  <button type="button" style="background: #222; color: #777; font-size: 12px;" onclick="openHow()">HOW TO PLAY?</button>
+    <div class="input-label">AMOUNT TO LEVERAGE ($)</div>
+    <input type="number" id="betInput" value="10">
+    <button id="rollBtn" class="btn-exec" onclick="startRoll()">Execute Forecast</button>
+    
+    <div id="status" style="text-align:center; margin-top:15px; color:gold; font-size: 11px; font-weight: 600; min-height: 16px;"></div>
 
-  <div class="status" id="status" style="text-align:center; margin-top:10px; color:#888;"></div>
+    <div class="guidelines">
+        <h4>Trading Guidelines</h4>
+        <ul>
+            <li>• Select a Target Node (N-1 to N-6) to begin analysis.</li>
+            <li>• Higher leverage amounts yield 5.0x Settlement on success.</li>
+            <li>• Market analysis takes approx 6 seconds to settle.</li>
+            <li>• Ensure sufficient Equity before executing the forecast.</li>
+            <li>• Joy Broker uses AI-driven algorithms for Node settlement.</li>
+        </ul>
+    </div>
 </div>
 
 <div class="popup" id="resultPopup">
-  <div class="popup-box">
-    <h3 id="resTitle"></h3>
-    <p id="resText"></p>
-    <button onclick="closePop()">COLLECT CASH</button>
-  </div>
-</div>
-
-<div class="popup" id="howPopup">
-  <div class="popup-box">
-    <h3 style="color:gold">How To Play</h3>
-    <p style="color:#ccc; font-size:14px; text-align:left; margin-top:15px;">
-      1. Select a number (1–6)<br>
-      2. Enter your bet amount<br>
-      3. Wait 10s for the dice roll<br>
-      4. Match the number to win 5x!<br>
-      
-    </p>
-    <button onclick="closeHow()">GOT IT</button>
-  </div>
+    <div class="popup-box">
+        <h3 id="resTitle" class="res-title"></h3>
+        <p id="resText" class="res-text"></p>
+        <button class="btn-collect" onclick="closePop()">COLLECT SETTLEMENT</button>
+    </div>
 </div>
 
 <script>
-// --- Firebase Config (Same) ---
+// --- Firebase Config ---
 const firebaseConfig = {
     apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
     authDomain: "ludo-joy-fb32d.firebaseapp.com",
@@ -112,19 +125,12 @@ const db = firebase.database();
 let wallet = 0;
 let selected = null;
 let rolling = false;
-
-// UI Elements
-const dice = document.getElementById("dice");
-const rollBtn = document.getElementById("rollBtn");
-const status = document.getElementById("status");
-const betInput = document.getElementById("betInput");
 const diceFaces = ["⚀","⚁","⚂","⚃","⚄","⚅"];
 
-// Sync Wallet
 auth.onAuthStateChanged(user => {
     if (user) {
         db.ref('users/' + user.uid + '/wallet').on('value', (s) => {
-            wallet = s.val() || 0;
+            wallet = parseFloat(s.val()) || 0;
             document.getElementById("walletSpan").innerText = wallet.toFixed(2);
         });
     } else { window.location.href = "index.html"; }
@@ -137,51 +143,58 @@ function selectNum(n){
     document.querySelectorAll(".num")[n-1].classList.add("active");
 }
 
-// --- Popup Control Functions (Fixed) ---
-function openHow() { 
-    document.getElementById('howPopup').style.display = "flex"; 
-}
-function closeHow() { 
-    document.getElementById('howPopup').style.display = "none"; 
-}
-function closePop() { 
-    document.getElementById('resultPopup').style.display = "none"; 
-}
-
 function startRoll(){
-    let bet = Number(betInput.value);
-    if(!selected) return alert("Select a number!");
-    if(bet <= 0 || bet > wallet) return alert("Invalid balance/bet!");
+    let bet = Number(document.getElementById("betInput").value);
+    if(!selected) return alert("Please select a Target Node (N-1 to N-6)!");
+    if(bet <= 0 || bet > wallet) return alert("Insufficient Margin for this trade!");
 
     rolling = true;
-    rollBtn.disabled = true;
+    document.getElementById("rollBtn").disabled = true;
+    document.getElementById("rollSound").play();
+
     db.ref('users/' + auth.currentUser.uid).update({ wallet: wallet - bet });
 
-    status.innerText = "Rolling...";
-    dice.style.animation = "roll .4s linear infinite";
+    document.getElementById("status").innerText = "ANALYZING MARKET DATA...";
+    document.getElementById("dice").style.animation = "roll 0.5s infinite linear";
 
     setTimeout(()=>{
-        dice.style.animation = "none";
+        document.getElementById("dice").style.animation = "none";
         
-        // HARD MODE: Loop until result is NOT selected
         let result;
-        do {
-            result = Math.floor(Math.random()*6) + 1;
-        } while (result === selected);
+        let luck = Math.random() * 100;
+        
+        if (luck < 90) { 
+            do { result = Math.floor(Math.random()*6) + 1; } while (result === selected);
+        } else { 
+            result = selected; 
+        }
 
-        dice.innerText = diceFaces[result-1];
+        document.getElementById("dice").innerText = diceFaces[result-1];
         
         setTimeout(()=>{
-            document.getElementById('resTitle').innerText = "❌ Better Luck!";
-            document.getElementById('resText').innerHTML = `Dice: ${result}<br>You picked: ${selected}`;
-            document.getElementById('resultPopup').style.display = "flex";
+            if(result === selected) {
+                let profit = bet * 5.0;
+                db.ref('users/' + auth.currentUser.uid).update({ wallet: (wallet - bet) + profit });
+                document.getElementById("winSound").play();
+                document.getElementById('resTitle').innerText = "TRADE SUCCESS";
+                document.getElementById('resTitle').style.color = "#00ff88";
+                document.getElementById('resText').innerHTML = `Node N-${result} matched successfully.<br>Settlement: +$${profit.toFixed(2)}`;
+            } else {
+                document.getElementById("lossSound").play();
+                document.getElementById('resTitle').innerText = "ANALYSIS FAILED";
+                document.getElementById('resTitle').style.color = "#ff4d4d";
+                document.getElementById('resText').innerHTML = `Market Hit: N-${result}<br>Result: Margin Liquidation`;
+            }
             
-            status.innerText = "";
-            rollBtn.disabled = false;
+            document.getElementById('resultPopup').style.display = "flex";
+            document.getElementById("status").innerText = "";
+            document.getElementById("rollBtn").disabled = false;
             rolling = false;
-        }, 1500);
-    }, 10000);
+        }, 1200);
+    }, 6000);
 }
+
+function closePop() { document.getElementById('resultPopup').style.display = "none"; }
 </script>
 </body>
 </html>
