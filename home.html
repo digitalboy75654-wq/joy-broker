@@ -17,9 +17,29 @@ body{
   background:radial-gradient(circle,#111,#000);
   color:#fff;
   min-height:100vh;
+  overflow-x: hidden;
 }
 
-/* HEADER */
+/* 1. TOP LIVE MARKET TICKER */
+.ticker-wrap {
+    background: #000;
+    color: #00ff88;
+    font-size: 11px;
+    padding: 8px;
+    border-bottom: 1px solid #222;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.ticker-move {
+    display: inline-block;
+    animation: marquee 25s linear infinite;
+}
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+/* HEADER & WALLET */
 .header{
   display:flex;
   justify-content:space-between;
@@ -47,10 +67,9 @@ body{
     justify-content: space-between;
     border-bottom: 1px solid rgba(255, 215, 0, 0.2);
 }
-.user-info-bar span { color: #ccc; }
 .user-info-bar b { color: gold; }
 
-/* ACTIONS & BUTTONS */
+/* ACTIONS BUTTONS */
 .actions{
   display:flex;
   justify-content:space-around;
@@ -87,40 +106,83 @@ body{
   box-shadow:0 0 20px rgba(255,215,0,.2);
   transition:.3s;
 }
-.card:hover{
-  transform:translateY(-6px);
-  box-shadow:0 0 30px rgba(255,215,0,.5);
-}
+.card:hover{ transform:translateY(-6px); box-shadow:0 0 30px rgba(255,215,0,.5); }
 .icon{font-size:40px; margin-bottom: 5px;}
 
-/* BOTTOM NAV (Support & Logout) */
-.bottom-nav {
+/* 2. LIVE UK EARNING TOAST (POPUP) */
+.earning-toast {
     position: fixed;
-    bottom: 20px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-.nav-btn {
-    background: #222;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 30px;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 20, 20, 0.95);
     border: 1px solid gold;
-    font-size: 14px;
-    cursor: pointer;
-    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10000;
+    box-shadow: 0 5px 25px rgba(255, 215, 0, 0.4);
+    animation: slideDown 0.5s ease, fadeOut 0.5s 3.5s forwards;
 }
-.logout-btn { border-color: #ff4d4d; color: #ff4d4d; }
+@keyframes slideDown { from { top: -60px; opacity: 0; } to { top: 90px; opacity: 1; } }
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
 
-@media(max-width:600px){
-  .grid{grid-template-columns:1fr}
+/* 3. SUPPORT NOTIFICATION BADGE */
+.support-container {
+    position: fixed;
+    bottom: 25px;
+    right: 20px;
+    z-index: 9999;
 }
+.btn-support-modern {
+    background: linear-gradient(135deg, #ffd700, #b8860b);
+    color: #000;
+    border: none;
+    padding: 12px 25px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+}
+#supportBadge {
+    display: none;
+    position: absolute;
+    top: -10px;
+    right: -2px;
+    background: #ff0000;
+    color: white;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    min-width: 24px;
+    height: 24px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 20px;
+    animation: badge-pulse 1.5s infinite;
+}
+@keyframes badge-pulse {
+    0% { transform: scale(1); }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@media(max-width:600px){ .grid{grid-template-columns:1fr} }
 </style>
 </head>
-
 <body>
+
+<div class="ticker-wrap">
+    <div class="ticker-move">
+        BTC/USD: <span id="btc-price">$96,432.10</span> • ETH/USD: <span id="eth-price">$2,451.80</span> • UK Server Status: <span style="color:#00ff88">SECURE</span> • AI Trading: <span style="color:gold">Active</span> • Total Payout: $1,420,500
+    </div>
+</div>
 
 <div class="header">
   <div class="logo">Joy Broker</div>
@@ -135,24 +197,19 @@ body{
 <div class="actions">
   <button onclick="go('deposit.html')">💵 Deposit</button>
   <button onclick="go('withdraw.html')">💸 Withdraw</button>
-  <button onclick="go('referral.html')">👥 Referral 50%</button>
+  <button onclick="go('referral.html')">👥 50% Ref</button>
 </div>
 
 <div class="games">
   <h2>Select Game</h2>
   <div class="grid">
-    <div class="card" onclick="go('spinner.html')">
-      <div class="icon">🎡</div>Spinner
-    </div>
-    <div class="card" onclick="go('dice.html')">
-      <div class="icon">🎲</div>Dice Roll
-    </div>
-    <div class="card" onclick="go('investing.html')">
-      <div class="icon">💰</div>Invest In AI Daily Profit 3%
-    </div>
+    <div class="card" onclick="go('spinner.html')"><div class="icon">🎡</div>Spinner</div>
+    <div class="card" onclick="go('dice.html')"><div class="icon">🎲</div>Dice Roll</div>
+    <div class="card" onclick="go('investing.html')"><div class="icon">💰</div>AI Invest 3%</div>
   </div>
 </div>
-  <div style="margin: 25px; padding: 20px; background: rgba(255, 215, 0, 0.05); border-radius: 15px; border: 1px dashed rgba(255, 215, 0, 0.3);">
+
+<div style="margin: 25px; padding: 20px; background: rgba(255, 215, 0, 0.05); border-radius: 15px; border: 1px dashed rgba(255, 215, 0, 0.3);">
     <h4 style="color: gold; margin-bottom: 10px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
         <span>🤖</span> How Our AI Investment Works
     </h4>
@@ -166,105 +223,17 @@ body{
     </p>
 </div>
 
-  <div style="margin: 20px; padding: 15px; background: #111; border-radius: 20px; border: 1px solid #333; box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);">
-    <h3 style="color: gold; text-align: center; font-size: 16px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">
-        🏆 Live Top Earners (Hourly)
-    </h3>
-    <div id="top-earners-list">
-        </div>
+<div style="margin: 20px; padding: 15px; background: #111; border-radius: 20px; border: 1px solid #333; box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);">
+    <h3 style="color: gold; text-align: center; font-size: 16px; margin-bottom: 15px; text-transform: uppercase;">🏆 Live Top 10 Earners</h3>
+    <div id="top-earners-list"></div>
 </div>
-
-<div class="bottom-nav">
-    <style>
-    .support-container {
-        position: fixed; /* Aap ise 'relative' bhi kar sakte hain agar list mein rakhna ho */
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-    }
-
-    .btn-support-modern {
-        background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
-        color: #000;
-        border: none;
-        padding: 12px 22px;
-        font-size: 14px;
-        font-weight: bold;
-        border-radius: 50px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .btn-support-modern:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
-    }
-
-    /* Notification Badge */
-    #supportBadge {
-        display: none; /* Default hidden */
-        position: absolute;
-        top: -8px;
-        right: -2px;
-        background: #ff0000;
-        color: white;
-        border: 2px solid #fff;
-        border-radius: 50%;
-        min-width: 22px;
-        height: 22px;
-        font-size: 11px;
-        font-weight: bold;
-        text-align: center;
-        line-height: 18px;
-        box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-        animation: badge-pulse 1.5s infinite;
-    }
-
-    @keyframes badge-pulse {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-        70% { transform: scale(1.2); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
-    }
-</style>
 
 <div class="support-container">
     <span id="supportBadge">0</span>
-    <button onclick="window.location.href='chat.html'" class="btn-support-modern">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-        </svg>
+    <button onclick="go('chat.html')" class="btn-support-modern">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
         Support
     </button>
-</div>
-
-<script>
-    // Ensure Firebase is initialized before this
-    firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-            const badge = document.getElementById('supportBadge');
-            const uid = user.uid;
-
-            // Listen to unread messages from Admin
-            firebase.database().ref('notifications/' + uid + '/unread').on('value', snap => {
-                const unreadCount = snap.val() || 0;
-                
-                if (unreadCount > 0) {
-                    badge.innerText = unreadCount;
-                    badge.style.display = 'block';
-                } else {
-                    badge.style.display = 'none';
-                }
-            });
-        }
-    });
-</script>
-    
 </div>
 
 <script>
@@ -283,20 +252,40 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-// --- Live Sync with Realtime Database ---
+// --- 100+ UK Names & Locations Database ---
+const ukDatabase = [
+    {n: "Oliver", c: "London"}, {n: "Harry", c: "Manchester"}, {n: "Jack", c: "Liverpool"}, {n: "Noah", c: "Birmingham"},
+    {n: "Charlie", c: "Leeds"}, {n: "Jacob", c: "Sheffield"}, {n: "Alfie", c: "Bristol"}, {n: "Freddie", c: "Leicester"},
+    {n: "Oscar", c: "Coventry"}, {n: "Leo", c: "Cardiff"}, {n: "Arthur", c: "Belfast"}, {n: "Archie", c: "Newcastle"},
+    {n: "Theo", c: "Brighton"}, {n: "Joshua", c: "Hull"}, {n: "James", c: "Reading"}, {n: "William", c: "Plymouth"},
+    {n: "Henry", c: "Stoke"}, {n: "Amelia", c: "London"}, {n: "Isla", c: "Manchester"}, {n: "Ava", c: "Derby"},
+    {n: "Mia", c: "Southampton"}, {n: "Isabella", c: "Swansea"}, {n: "Sophia", c: "Cambridge"}, {n: "Grace", c: "Oxford"},
+    {n: "Lily", c: "York"}, {n: "Freya", c: "Luton"}, {n: "Ivy", c: "Portsmouth"}, {n: "Willow", c: "Aberdeen"},
+    {n: "Florence", c: "Everton"}, {n: "Emily", c: "Chelsea"}, {n: "Rosie", c: "Bolton"}, {n: "Alice", c: "Preston"}
+];
+
 auth.onAuthStateChanged(user => {
     if (user) {
-        // UID display (First 8 characters)
         document.getElementById("display-id").innerText = user.uid.substring(0, 8);
         
-        // Database se asli data fetch karein
+        // Real-time Wallet Sync
         db.ref('users/' + user.uid).on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // Wallet balance sync
                 document.getElementById("balance").innerText = Number(data.wallet || 0).toFixed(2);
-                // Username sync
                 document.getElementById("display-name").innerText = data.username || "User";
+            }
+        });
+
+        // LIVE SUPPORT NOTIFICATION BADGE
+        db.ref('notifications/' + user.uid + '/unread').on('value', snap => {
+            const unreadCount = snap.val() || 0;
+            const badge = document.getElementById('supportBadge');
+            if (unreadCount > 0) {
+                badge.innerText = unreadCount;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
             }
         });
     } else {
@@ -304,82 +293,63 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-// --- Actions ---
-function go(page){
-  window.location.href = page;
-}
+function go(page){ window.location.href = page; }
 
-function logout() {
-    auth.signOut().then(() => {
-        window.location.href = "index.html";
-    });
-}
-
-function openSupport() {
-    // Ab ye seedha chat.html par le jayega jahan user message bhej sake
-    window.location.href = "chat.html"; 
-}
-
-  // --- Is line ke niche paste karein (openSupport function ke baad) ---
-
+// --- Top Earners List (UK Persons) ---
 function generateTopEarners() {
     const listContainer = document.getElementById('top-earners-list');
-    
-    // Names Pool (Inmein se har ghante random select honge)
-    const namesPool = [
-        "Zayan_Khan", "Crypto_Ali", "Sarah_99", "Ahmed_Trader", "Expert_Pro", 
-        "Lucky_Win", "Bilal_Joy", "Maria_Invest", "Usman_BTC", "Rizwan_786",
-        "Bullish_Boy", "Daily_Profit", "Noor_Fatima", "Hamza_King", "Sofia_Trade"
-    ];
-
-    const currentHour = new Date().getHours();
-    
-    // Randomly select 10 names
-    let hourlyNames = [...namesPool].sort(() => 0.5 - Math.random()).slice(0, 10);
-
     let html = "";
+    
+    // Random 10 persons for the list
+    let selected = [...ukDatabase].sort(() => 0.5 - Math.random()).slice(0, 10);
 
-    hourlyNames.forEach((name, i) => {
-        // Unique Random ID (e.g. ID: 4X9BT2)
-        let randomID = Math.random().toString(36).substring(2, 8).toUpperCase();
-        
-        // Earning logic: Har ghante badalti hui values (0.00000 format)
-        let baseAmount = (100 + (Math.random() * 500) + (currentHour * 2)).toFixed(5);
-
+    selected.forEach((person, i) => {
+        let randomID = Math.random().toString(36).substring(2, 7).toUpperCase();
+        let amount = (250 + (Math.random() * 700)).toFixed(2);
         html += `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 5px; border-bottom: 1px solid #222;">
-                <div style="display: flex; flex-direction: column; gap: 2px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: gold; font-weight: bold; font-size: 11px;">#${i + 1}</span>
-                        <span style="color: #fff; font-size: 13px; font-weight: 600;">${name}</span>
-                    </div>
-                    <span style="color: #666; font-size: 10px; margin-left: 20px;">ID: ${randomID}</span>
+                <div>
+                    <span style="color: gold; font-weight: bold;">#${i + 1}</span> 
+                    <span style="color: #fff; font-size: 13px; font-weight: 600;">${person.n}_${person.c}</span><br>
+                    <span style="color: #555; font-size: 10px;">UID: ${randomID}-UK</span>
                 </div>
                 <div style="text-align: right;">
-                    <div style="color: #25D366; font-weight: bold; font-family: monospace; font-size: 14px;">
-                        +$${baseAmount}
-                    </div>
+                    <div style="color: #00ff88; font-weight: bold; font-family: monospace; font-size: 14px;">+$${amount}</div>
                     <div style="color: #444; font-size: 9px; text-transform: uppercase;">Earned Now</div>
                 </div>
-            </div>
-        `;
+            </div>`;
     });
-    
     listContainer.innerHTML = html;
 }
 
-// Initial Call
-generateTopEarners();
+// --- Live Earning Popups (UK Persons) ---
+function showLiveToast() {
+    const person = ukDatabase[Math.floor(Math.random() * ukDatabase.length)];
+    const amount = (20 + Math.random() * 100).toFixed(2);
+    
+    const toast = document.createElement('div');
+    toast.className = 'earning-toast';
+    toast.innerHTML = `
+        <span>💎</span>
+        <span style="font-size:12px"><b>${person.n}</b> from <b>${person.c}</b> just earned <b style="color:gold">$${amount}</b></span>
+    `;
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 4 seconds
+    setTimeout(() => { toast.remove(); }, 4000);
+}
 
-// Refresh every 1 hour
-setInterval(generateTopEarners, 3600000);
+// Update Market Prices
+setInterval(() => {
+    let btc = 96000 + (Math.random() * 500);
+    document.getElementById('btc-price').innerText = `$${btc.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+}, 3000);
+
+// Initial Calls
+generateTopEarners();
+setInterval(generateTopEarners, 3600000); // Refresh list every hour
+setInterval(showLiveToast, 12000); // New earning popup every 12 seconds
 </script>
 
 </body>
-
 </html>
-
-
-
-
-
