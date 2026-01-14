@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -189,11 +190,19 @@ body{
   <div class="wallet">Balance: $<span id="balance">0.00</span></div>
 </div>
 
-<div class="user-info-bar">
-    <span>User: <b id="display-name">Loading...</b></span>
-    <span>ID: <b id="display-id">...</b></span>
+<div style="background: rgba(255, 215, 0, 0.05); padding: 12px 20px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 215, 0, 0.1);">
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="color: #ccc;">User: <b id="display-name" style="color: gold;">Loading...</b></span>
+        
+        <span style="background: rgba(0, 255, 136, 0.12); color: #00ff88; padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; border: 1px solid rgba(0, 255, 136, 0.3); display: inline-flex; align-items: center; gap: 4px; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="filter: drop-shadow(0 0 2px rgba(0, 255, 136, 0.5));">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            Verified
+        </span>
+    </div>
+    <span style="color: #666;">ID: <b id="display-id" style="color: gold;">...</b></span>
 </div>
-
 <div class="actions">
   <button onclick="go('deposit.html')">💵 Deposit</button>
   <button onclick="go('withdraw.html')">💸 Withdraw</button>
@@ -348,8 +357,7 @@ setInterval(() => {
 // Initial Calls
 generateTopEarners();
 setInterval(generateTopEarners, 3600000); // Refresh list every hour
-setInterval(showLiveToast, 12000); // New earning popup every 12 seconds
+setInterval(showLiveToast, 22000); // New earning popup every 12 seconds
 </script>
-
 </body>
 </html>
