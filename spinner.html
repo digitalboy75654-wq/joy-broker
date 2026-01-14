@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Golden Spin - Pro User</title>
+<title>Market Cycle Analysis | Joy Broker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -11,75 +11,85 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root { --gold:#ffd700; --dark-gold:#b8860b; --bg:#0a0a0a; }
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
-body{background:radial-gradient(circle,#1a1a1a,#000);min-height:100vh;display:flex;justify-content:center;align-items:center;color:#fff;overflow:hidden;}
-.card{width:380px;background:#0a0a0a;border-radius:30px;padding:25px;box-shadow:0 0 60px rgba(212,175,55,0.2);border:1px solid #222;text-align:center;position:relative;}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;}
-.balance-box{background:rgba(255,215,0,0.1);padding:10px 18px;border-radius:50px;color:var(--gold);border:1px solid var(--gold);font-weight:800;font-size:14px;}
-.wheel-box{position:relative;width:310px;height:310px;margin:auto;border:10px solid #151515;border-radius:50%;}
-.arrow{position:absolute;top:-15px;left:50%;transform:translateX(-50%);z-index:100;width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:35px solid var(--gold);filter:drop-shadow(0 0 10px var(--gold));}
-.wheel{width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden;transition:transform 30s cubic-bezier(0.1,0,0.1,1);background:#111;border:4px solid var(--gold);}
-.slice{position:absolute;width:50%;height:50%;top:0;left:50%;transform-origin:0% 100%;}
-.slice-inner{width:100%;height:100%;clip-path: polygon(0 100%, 32% 0, 0 0); display:flex;justify-content:center;align-items:center;}
-.slice:nth-child(even) .slice-inner{background:#863e07;}
-.slice-inner span{position:absolute;top:20px;left:2px;transform:rotate(-78deg);font-size:11px;font-weight:800;color:#fff;}
+    :root { --gold:#ffd700; --dark-gold:#b8860b; --bg:#0a0a0a; }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+    body{background:radial-gradient(circle,#1a1a1a,#000);min-height:100vh;display:flex;justify-content:center;align-items:center;color:#fff;overflow-x:hidden; padding: 20px 0;}
 
-.bet-input{width:100%;padding:15px;margin-top:25px;border-radius:15px;background:#111;color:var(--gold);border:1px solid #333;text-align:center;font-size:18px;font-weight:800;}
-.btn-spin{width:100%;margin-top:15px;padding:18px;border:none;border-radius:18px;background:linear-gradient(135deg,var(--gold),var(--dark-gold));color:#000;font-weight:900;cursor:pointer;font-size:18px;text-transform:uppercase;}
-.btn-spin:disabled{background: #444; color: #888; cursor: not-allowed;}
-.btn-how{margin-top:15px;font-size:12px;color:#777;cursor:pointer;background:none;border:none;text-decoration:underline;}
+    .back-btn { position: absolute; top: 20px; left: 20px; background: rgba(255,215,0,0.1); border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 10px; cursor: pointer; text-decoration: none; font-size: 12px; font-weight: bold; z-index: 1001; }
 
-/* Popup */
-.popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:none;justify-content:center;align-items:center;z-index:1000;}
-.popup-content{background:#111;padding:30px;border-radius:25px;text-align:center;border:2px solid var(--gold);width:90%;max-width:360px;}
-.popup-content h2{color:var(--gold);margin-bottom:15px;}
-.popup-content p{font-size:14px;line-height:1.6;color:#ccc;margin-bottom:10px;text-align:center;}
-.close-btn{width:100%;padding:12px;margin-top:20px;background:var(--gold);border:none;border-radius:10px;font-weight:800;cursor:pointer;}
-.confetti{position:absolute;width:8px;height:8px;pointer-events:none;z-index:999;border-radius:50%;}
+    .card{width:380px;background:#050505;border-radius:30px;padding:25px;box-shadow:0 0 60px rgba(212,175,55,0.15);border:1px solid #222;text-align:center;position:relative;}
+    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+    .balance-box{background:rgba(255,215,0,0.05);padding:10px 18px;border-radius:50px;color:var(--gold);border:1px solid var(--gold);font-weight:800;font-size:13px;}
+    
+    .wheel-box{position:relative;width:300px;height:300px;margin:20px auto;border:8px solid #151515;border-radius:50%; box-shadow: 0 0 30px rgba(0,0,0,1);}
+    .arrow{position:absolute;top:-20px;left:50%;transform:translateX(-50%);z-index:1000;width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:35px solid var(--gold);filter:drop-shadow(0 0 8px var(--gold));}
+    
+    .wheel{width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden; background:#111;border:3px solid var(--gold); transition: transform 30s cubic-bezier(0.15, 0, 0.1, 1);}
+    
+    .slice{position:absolute;width:50%;height:50%;top:0;left:50%;transform-origin:0% 100%;}
+    .slice-inner{width:100%;height:100%;clip-path: polygon(0 100%, 35% 0, 0 0); display:flex;justify-content:center;align-items:center;}
+    .slice:nth-child(even) .slice-inner{background:#2a2000;}
+    .slice:nth-child(odd) .slice-inner{background:#111;}
+    .slice-inner span{position:absolute;top:30px;left:2px;transform:rotate(-78deg);font-size:10px;font-weight:800;color:var(--gold);}
+
+    .input-label{text-align: left; font-size: 10px; color: #555; margin-left: 5px; margin-bottom: 5px; text-transform: uppercase;}
+    .bet-input{width:100%;padding:15px;margin-bottom:15px;border-radius:12px;background:#111;color:var(--gold);border:1px solid #333;text-align:center;font-size:18px;font-weight:800;outline:none;}
+    .btn-spin{width:100%;padding:18px;border:none;border-radius:15px;background:linear-gradient(135deg,var(--gold),var(--dark-gold));color:#000;font-weight:900;cursor:pointer;font-size:16px;text-transform:uppercase; letter-spacing: 1px;}
+    .btn-spin:disabled{background: #333; color: #666; cursor: not-allowed;}
+
+    /* English Guidelines */
+    .guidelines{margin-top: 25px; padding: 15px; background: rgba(255,215,0,0.02); border: 1px dashed #333; border-radius: 15px; text-align: left;}
+    .guidelines h4{font-size: 11px; color: gold; margin-bottom: 8px; text-transform: uppercase;}
+    .guidelines li{font-size: 10px; color: #777; margin-bottom: 4px; list-style: none;}
+
+    .popup{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;justify-content:center;align-items:center;z-index:2000;backdrop-filter: blur(10px);}
+    .popup-content{background:#0a0a0a;padding:40px 30px;border-radius:30px;text-align:center;border:1px solid var(--gold);width:90%;max-width:350px;}
+    .res-val{font-size:40px;font-weight:800;margin:15px 0;display:block;}
+    .close-btn{width:100%;padding:15px;margin-top:25px;background:var(--gold);border:none;border-radius:12px;font-weight:800;cursor:pointer;color:#000;}
 </style>
 </head>
 <body>
-    
+
+<audio id="spinSound" src="https://www.soundjay.com/misc/sounds/mechanical-clutter-1.mp3" preload="auto" loop></audio>
+<audio id="winSound" src="https://www.myinstants.com/media/sounds/win_nS6X7v9.mp3" preload="auto"></audio>
+<audio id="lossSound" src="https://www.myinstants.com/media/sounds/wrong-answer-126515.mp3" preload="auto"></audio>
+
+<a href="home.html" class="back-btn">← TERMINAL</a>
 
 <div class="card">
     <div class="header">
-        <b style="color: var(--gold); font-size: 14px;">GOLDEN SPIN</b>
-        <div class="balance-box">Wallet: $<span id="bal">0.00</span></div>
+        <b style="color: var(--gold); font-size: 12px; letter-spacing: 1px;">ALGO ANALYSIS</b>
+        <div class="balance-box">EQUITY: $<span id="bal">0.00</span></div>
     </div>
-
+    
     <div class="wheel-box">
         <div class="arrow"></div>
         <div id="wheel" class="wheel"></div>
     </div>
 
-    <input type="number" id="bet" value="10" class="bet-input" min="1">
-    <button class="btn-spin" id="spinBtn" onclick="startSpin()">SPIN & WAIT (30s)</button>
-    <button class="btn-how" onclick="togglePopup('howPopup', true)">HOW TO PLAY & EARN?</button>
-</div>
+    <div class="input-label">Investment Amount ($)</div>
+    <input type="number" id="bet" value="10" class="bet-input">
+    <button class="btn-spin" id="spinBtn" onclick="startSpin()">START MARKET CYCLE (30s)</button>
 
-<div class="popup" id="winPopup">
-    <div class="popup-content">
-        <h2 id="resTitle"></h2>
-        <p id="resText"></p>
-        <button class="close-btn" onclick="togglePopup('winPopup', false)">COLLECT CASH</button>
+    <div class="guidelines">
+        <h4>Analysis Rules</h4>
+        <li>• Market cycles require a 30-second computation period.</li>
+        <li>• Returns are calculated based on real-time node landing.</li>
+        <li>• Higher multipliers (up to 10x) occur during high volatility.</li>
+        <li>• Ensure stable connection during cycle execution.</li>
     </div>
 </div>
 
-<div class="popup" id="howPopup">
+<div class="popup" id="resPopup">
     <div class="popup-content">
-        <h2>How to Play</h2>
-        <p><b>1. Bet:</b> Select your amount.</p>
-        <p><b>2. Spin:</b> Wheel will spin 30 seconds, wait patiently.</p>
-        <p><b>3. Result:</b> The number under the arrow multiplies your bet.</p>
-        <hr style="border: 0.5px solid #333; margin: 15px 0;">
-        <p style="color: #0f0;"><b>Tip:</b> If spin lands 10x, $10 becomes $100!</p>
-        <button class="close-btn" onclick="togglePopup('howPopup', false)">LET'S PLAY</button>
+        <h2 id="resTitle" style="letter-spacing: 2px;"></h2>
+        <span id="resVal" class="res-val"></span>
+        <p id="resText" style="color:#888; font-size: 14px;"></p>
+        <button class="close-btn" onclick="togglePopup('resPopup', false)">COLLECT SETTLEMENT</button>
     </div>
 </div>
 
 <script>
-// --- Firebase Config (Same as before) ---
 const firebaseConfig = {
     apiKey: "AIzaSyDz_mp5wpULG732DXhZDoVczdy369j8WBY",
     authDomain: "ludo-joy-fb32d.firebaseapp.com",
@@ -89,92 +99,88 @@ const firebaseConfig = {
     messagingSenderId: "128560388256",
     appId: "1:128560388256:web:a8b945a3658160277391c5"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.database();
+const auth = firebase.auth();
 
-let balance = 0;
-let rotation = 0;
-// Index Map: 0-8 (Losses), 9 (1x), 12 (2x)
-const multis = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.2,1.5,2,2.5,3,3.5,4,4.5,5,10];
+let userWallet = 0;
+let currentRotation = 0;
+const multis = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 10.0];
+
 const wheel = document.getElementById('wheel');
-
-multis.forEach((m,i)=>{
-    let slice = document.createElement('div');
-    slice.className = 'slice';
-    slice.style.transform = `rotate(${i*18}deg)`;
-    slice.innerHTML = `<div class="slice-inner"><span>${m}x</span></div>`;
-    wheel.appendChild(slice);
+multis.forEach((m, i) => {
+    let div = document.createElement('div');
+    div.className = 'slice';
+    div.style.transform = `rotate(${i * 18}deg)`;
+    div.innerHTML = `<div class="slice-inner"><span>${m}x</span></div>`;
+    wheel.appendChild(div);
 });
 
 auth.onAuthStateChanged(user => {
-    if (user) {
-        db.ref('users/' + user.uid + '/wallet').on('value', (snapshot) => {
-            balance = snapshot.val() || 0;
-            document.getElementById('bal').innerText = balance.toFixed(2);
+    if(user) {
+        db.ref('users/' + user.uid + '/wallet').on('value', snap => {
+            userWallet = parseFloat(snap.val()) || 0;
+            document.getElementById('bal').innerText = userWallet.toFixed(2);
         });
-    } else {
-        window.location.href = "index.html";
-    }
+    } else { window.location.href = 'index.html'; }
 });
 
-function togglePopup(id, show){document.getElementById(id).style.display = show?'flex':'none';}
+function togglePopup(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
-function startSpin(){
-    const betInput = document.getElementById('bet');
-    const bet = Number(betInput.value);
-    
-    if(bet <= 0) return alert("Enter a valid bet!");
-    if(bet > balance) return alert("Insufficient balance!");
-
+function startSpin() {
+    const bet = parseFloat(document.getElementById('bet').value);
+    const user = auth.currentUser;
     const btn = document.getElementById('spinBtn');
+    const spinSound = document.getElementById('spinSound');
+
+    if(bet <= 0 || bet > userWallet) { alert("Insufficient Equity or Invalid Amount!"); return; }
+
     btn.disabled = true;
-    btn.innerText = "SPINNING...";
+    btn.innerText = "ANALYZING MARKET...";
+    spinSound.play();
+    
+    const walletRef = db.ref('users/' + user.uid + '/wallet');
 
-    // Deduct bet
-    db.ref('users/' + auth.currentUser.uid).update({ wallet: balance - bet });
-
-    // --- HARD LOGIC ---
-    let r = Math.random() * 100;
-    let winIdx;
-
-    if (r < 90) {
-        // 90% Chance: 0.1x to 0.5x (Loss)
-        // Sirf index 0 se 4 ke beech result aayega
-        winIdx = Math.floor(Math.random() * 5); 
-    } else {
-        // 10% Chance: 1x ya 2x (Profit/Break even)
-        // 1x ka index 9 hai, 2x ka index 12 hai
-        let smallWin = [9, 12];
-        winIdx = smallWin[Math.floor(Math.random() * smallWin.length)];
-    }
-
-    // Calculate rotation
-    const targetPos = 360 - (winIdx * 18 + 9);
-    rotation += (360 * 15) + (targetPos - (rotation % 360));
-    wheel.style.transform = `rotate(${rotation}deg)`;
-
-    setTimeout(() => {
-        const multi = multis[winIdx];
-        const winAmt = bet * multi;
+    // Instant Deduction
+    walletRef.set(userWallet - bet).then(() => {
         
-        db.ref('users/' + auth.currentUser.uid + '/wallet').transaction((currentBal) => {
-            return (currentBal || 0) + winAmt;
-        });
+        // 90/10 Logic (90% chance to land on 0.1x-0.7x)
+        let rand = Math.random() * 100;
+        let winIdx = (rand < 90) ? Math.floor(Math.random() * 7) : Math.floor(Math.random() * 5) + 9; 
 
-        if(multi >= 1) spawnConfetti();
+        const totalDeg = (360 * 30) + (360 - (winIdx * 18 + 9));
+        currentRotation += totalDeg;
+        wheel.style.transform = `rotate(${currentRotation}deg)`;
 
-        document.getElementById('resTitle').innerText = multi >= 1 ? "WINNER! 🎉" : "BET LOST 😢";
-        document.getElementById('resText').innerHTML = `Landed: <b>${multi}x</b><br>Return: <b>$${winAmt.toFixed(2)}</b>`;
-        togglePopup('winPopup', true);
+        setTimeout(() => {
+            spinSound.pause();
+            spinSound.currentTime = 0;
+            const multi = multis[winIdx];
+            const winAmount = bet * multi;
 
-        btn.disabled = false;
-        btn.innerText = "SPIN & WAIT (30s)";
-    }, 30000); 
-}
-
-function spawnConfetti(){
-    // (Same confetti function)
+            walletRef.transaction(curr => (parseFloat(curr) || 0) + winAmount).then(() => {
+                if(multi >= 1) {
+                    document.getElementById("winSound").play();
+                    document.getElementById('resTitle').innerText = "TRADE SUCCESS";
+                    document.getElementById('resTitle').style.color = "#00ff88";
+                    document.getElementById('resVal').innerText = "+$" + winAmount.toFixed(2);
+                } else {
+                    document.getElementById("lossSound").play();
+                    document.getElementById('resTitle').innerText = "ANALYSIS FAILED";
+                    document.getElementById('resTitle').style.color = "#ff4d4d";
+                    document.getElementById('resVal').innerText = "-$" + (bet - winAmount).toFixed(2);
+                }
+                
+                document.getElementById('resVal').style.color = (multi >= 1) ? "#00ff88" : "#ff4d4d";
+                document.getElementById('resText').innerHTML = `Multiplier Hit: <b>${multi}x</b>`;
+                
+                togglePopup('resPopup', true);
+                btn.disabled = false;
+                btn.innerText = "START MARKET CYCLE (30s)";
+            });
+        }, 30000);
+    });
 }
 </script>
 </body>
