@@ -53,9 +53,9 @@
     </div>
 
     <div class="card" id="inputCard">
-        <div class="card-header"><h2>Daily Earn 3% Plan</h2></div>
+        <div class="card-header"><h2>Daily Earn 3%-6% Plan</h2></div>
         <div class="rules-box">
-            <p>• Earn <b>3% Profit</b> every 24 hours.</p>
+            <p>• Earn <b>3%-6% Profit</b> every 24 hours.</p>
             <p>• Capital will remain <b>Frozen</b> during the cycle.</p>
             <p>• Returns are credited <b>automatically</b>.</p>
         </div>
@@ -102,7 +102,7 @@
     let userData = null;
     let trackerInterval = null;
     const CYCLE_MS = 24 * 60 * 60 * 1000; // 24 Hours
-    const PROFIT_PERCENT = 0.03; // 3%
+    const PROFIT_PERCENT = 0.03.5; // 3%
 
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -195,7 +195,7 @@
             wallet: (Number(userData.wallet) + totalReturn).toFixed(2),
             activeInvest: null
         }).then(() => {
-            alert("Cycle Completed! Your principal + 3% profit has been added.");
+            alert("Cycle Completed! Your principal + 3%-6% profit has been added.");
         });
     }
 
@@ -211,4 +211,5 @@
 </script>
 </body>
 </html>
+
 
