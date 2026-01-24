@@ -211,14 +211,26 @@ body{
   <button onclick="go('referral.html')">👥 50% Ref</button>
 </div>
 
-<div class="games">
-  <h2>Select plan</h2>
-  <div class="grid">
-    <div class="card" onclick="go('spinner.html')"><div class="icon">🎡</div>EXECUTE TRADE</div>
-    <div class="card" onclick="go('dice.html')"><div class="icon">🎲</div>6-Point Prediction</div>
-    <div class="card" onclick="go('investing.html')"><div class="icon">💰</div>Invest With Ai Daily Profit 3%-6%
+<div class="games" style="margin: 20px;">
+  <h2 style="text-align: center; color: gold; margin-bottom: 15px;">Select Plan</h2>
+  
+  <div class="grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
     
-   </div>
+    <div class="card" onclick="go('spinner.html')" style="background: #111; border-radius: 18px; padding: 10px; text-align: center; cursor: pointer; box-shadow: 0 0 20px rgba(255,215,0,.2); transition: .3s; border: 1px solid rgba(255, 215, 0, 0.1);">
+        <img src="trade.jpg" alt="Trade" style="width: 100%; height: 100px; object-fit: cover; border-radius: 12px; margin-bottom: 8px;">
+        <div style="font-size: 11px; font-weight: 600; color: gold;">EXECUTE TRADE</div>
+    </div>
+
+    <div class="card" onclick="go('dice.html')" style="background: #111; border-radius: 18px; padding: 10px; text-align: center; cursor: pointer; box-shadow: 0 0 20px rgba(255,215,0,.2); transition: .3s; border: 1px solid rgba(255, 215, 0, 0.1);">
+        <img src="prediction.jpg" alt="Prediction" style="width: 100%; height: 100px; object-fit: cover; border-radius: 12px; margin-bottom: 8px;">
+        <div style="font-size: 11px; font-weight: 600; color: gold;">6-POINT PREDICTION</div>
+    </div>
+
+    <div class="card" onclick="go('investing.html')" style="background: #111; border-radius: 18px; padding: 10px; text-align: center; cursor: pointer; box-shadow: 0 0 20px rgba(255,215,0,.2); transition: .3s; border: 1px solid rgba(255, 215, 0, 0.1);">
+        <img src="ai-invest.jpg" alt="AI Invest" style="width: 100%; height: 100px; object-fit: cover; border-radius: 12px; margin-bottom: 8px;">
+        <div style="font-size: 10px; font-weight: 600; color: gold;">AI DAILY PROFIT</div>
+    </div>
+
   </div>
 </div>
 
@@ -365,6 +377,7 @@ setInterval(showLiveToast, 22000); // New earning popup every 12 seconds
 </script>
 </body>
 </html>
+
 
 
 
